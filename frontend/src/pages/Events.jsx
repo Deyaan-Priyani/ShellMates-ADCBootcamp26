@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react"; //importing from react so we can use
 import api from "/frontend/src/services/api"; //axios instance from env setup
+import EventCard from "../components/EventCard.jsx"; //TODO: CHECK THIS ONCE AYAD DOES EVENTCARDS
 
 //constant of event categories; one will be active at a time
 const eventCategories = 
@@ -143,7 +144,8 @@ function Events()
 
         </div>
 
-        //events list:
+        //TODO: events list (will implement once eventcards are ready!!!!!) (^will put before that div)
+            //idea for implementation: in its own div, map over every event in const events to pass as a card
 
     );
 
