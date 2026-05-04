@@ -11,23 +11,28 @@ const eventCategories =
 ]
 
 //where all the tabs are stored
-function eventTabs()
+function Events()
 {
     ///////CONSTS:
 
+    //decides what the active category is (aka when looking through events, some will be active and some won't bc filters)
     const [activeCategory, setActiveCategory] = useState("All"); //used for setting active category when clicked
     //(all is used by default, bc when we start up there's no filter selected yet)
 
+    //list of all events--starts off empty bc no events yet (we pull those from the backend)
     const [events, setEvents] = useState([]); //used for setting events we see on screen
-    //(start off with nothing bc no events set yet) 
+
+    //for study sessions specifically--when we study we can say what courses we're doing
+    const [courseCode, setCourseCode] = useState("");
+
 
     ///////FOR TAB BUTTONS: 
 
     //function that handles clicking and setting the active tab
+    //TODO: necessary?
     function activeCategory(item)
     {
-        setActiveCategory(item); //TODO: change this name
-
+        setActiveCategory(item);
     }
 
     //function that checks in the button if it's active or not
@@ -61,7 +66,13 @@ function eventTabs()
             filtersAdded.category = activeCategory;   
         }
 
-        //TODO: add more filters (once other stuff is set up yippee)
+        if(activeCategory === "Study Sessions" && courseCode != "")
+        {
+            //if we're filtering by study sessions, we can add a course filter
+            //so only that specific course will show up in the results
+            filtersAdded.course = courseCode;
+
+        }
 
         //contact API to get all the events that match these filters, returned into list
         const eventsLoaded = await api.get("/events", {filtersAdded});
@@ -72,29 +83,66 @@ function eventTabs()
     }
 
     //^now we call the loadEvents function up there using useEffect, so this triggers whenever we change activeCategory
-    useEffect(() => {loadEvents();}, [activeCategory]);
+    useEffect(() => {loadEvents();}, [activeCategory, courseCode]);
     //(when activeCategory changes, call loadEvents, activeCategory is dependency)
 
 
+    ///////////COURSE FILTERS:
 
-    return 
-    (
+    //used for course code entry, checks if there should be input area for course code
+    function ifCourseCode()
+    {
+        if(activeCategory === "Study Sessions")
+        {
+            //show input if study sessions is checked
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    //goes with prev function, takes in the empty event & sets the courseCode to 
+    //the value entererd by the user
+    function setCourseFilter(event)
+    {
+        setCourseCode(event.target.value);
+    }
+
+
+    return (
         //all the tabs inside the filter bar
         //TODO: is key supposed to be in brackets or quotations?
-        <div id = "FilterBar">
-            <button key="All"  onClick={setActiveCategory} className={isActive(All)}>All</button> 
-            
-            <button key="PartiesAndPregames"  onClick={setActiveCategory} 
-                className={isActive(PartiesAndPregames)}>PartiesAndPregames</button>
+        <div>
+            <div id = "FilterBar">
+                <button key="All"  onClick={() => setActiveCategory("All")} 
+                    className={isActive("All")}>All</button> 
+                
+                <button key="PartiesAndPregames"  onClick={() => setActiveCategory("Parties and Pregames")} 
+                    className={isActive("Parties and Pregames")}>PartiesAndPregames</button>
 
-            <button key="SportsAndTournaments"  onClick={setActiveCategory} 
-                className={isActive(SportsAndTournaments)}>SportsAndTournaments</button> 
+                <button key="SportsAndTournaments"  onClick={() => setActiveCategory("Sports and Tournaments")} 
+                    className={isActive("Sports and Tournaments")}>SportsAndTournaments</button> 
 
-            <button key="StudySessions"  onClick={setActiveCategory} 
-                className={isActive(StudySessions)}>Study Sessions</button>
-            
-            <button key="Miscellaneous"  onClick={setActiveCategory} className={isActive(Miscellaneous)}>Miscellaneous</button>  
+                <button key="StudySessions"  onClick={() => setActiveCategory("Study Sessions")} 
+                    className={isActive("Study Sessions")}>Study Sessions</button>
+                
+                <button key="Miscellaneous"  onClick={() => setActiveCategory("Miscellaneous")} 
+                    className={isActive("Miscellaneous")}>Miscellaneous</button>  
+            </div>
+
+        {/*the '&&' is like an if-else. handles course codes */}
+        {shouldShowCourseInput() &&
+            ( <input type="text" placeholder = "Filter by COURSE CODE (e.g CMSC132)"
+                value={courseCode} onChange={ifCourseCode} 
+                />
+            )
+
+        }
+
         </div>
+
         //events list:
 
     );
