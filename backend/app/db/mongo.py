@@ -4,5 +4,9 @@ import os
 
 load_dotenv()
 
-client = AsyncIOMotorClient(os.getenv("mongodb+srv://shellmates-admin:dvp1TR12kqzrDeym@cluster0.0pa4wpa.mongodb.net/?appName=Cluster0"))
+mongodb_uri = os.getenv("MONGODB_URI")
+if not mongodb_uri:
+    raise RuntimeError("Missing MONGODB_URI environment variable")
+
+client = AsyncIOMotorClient(mongodb_uri)
 db = client["shellmates"]

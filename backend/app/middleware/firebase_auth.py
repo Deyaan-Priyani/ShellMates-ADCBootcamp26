@@ -3,8 +3,13 @@ from firebase_admin import credentials, auth
 from fastapi import HTTPException, Header
 import os
 
-cred = credentials.Certificate(os.getenv("Desktop/ProjectADC/ShellMates-ADCBootcamp26/backend/firebase-service-account.json"))
-firebase_admin.initialize_app(cred)
+firebase_key_path = os.getenv("FIREBASE_SERVICE_ACCOUNT_KEY")
+if not firebase_key_path:
+    raise RuntimeError("Missing FIREBASE_SERVICE_ACCOUNT_KEY environment variable")
+
+cred = credentials.Certificate(firebase_key_path)
+if not firebase_admin._apps:
+    firebase_admin.initialize_app(cred)
 
 async def verify_token(authorization: str = Header(...)):
     if not authorization.startswith("Bearer "):
