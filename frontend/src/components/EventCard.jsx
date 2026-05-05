@@ -1,4 +1,5 @@
-import { useAuth } from "context/AuthContext"
+import { useAuth } from "../context/AuthContext"
+import { RankBadge} from "./RankBadge"
 
 const EventCard = ({ event }) => {
     const { user } = useAuth();
@@ -27,7 +28,7 @@ const EventCard = ({ event }) => {
             {/*Host info*/}
             <div className="host-info">
                 <p>
-                    Hosted by: {user.name} {user.rankBadge}
+                    Hosted by: {user.name} <></>
                 </p>
             </div>
 
