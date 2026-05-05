@@ -28,7 +28,7 @@ const EventCard = ({ event }) => {
             {/*Host info*/}
             <div className="host-info">
                 <p>
-                    Hosted by: {user.name} <></>
+                    Hosted by: {user.name} <RankBadge tier = {user.rankBadge}/>
                 </p>
             </div>
 
