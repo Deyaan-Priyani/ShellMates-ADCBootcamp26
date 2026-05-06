@@ -15,6 +15,7 @@ function EventDetails()
     const {id} = useParams(); //pulls id from url
     const [event, setEvent] = useState(null);
     const [isLoading, setLoading] = useState(false);
+    const [isRSVP, setRSVP] = useState(false);
 
     //lets us change the url when going to the details section
     const navigate = useNavigate()
@@ -41,6 +42,45 @@ function EventDetails()
 
     //call loadEvent whenever id changes
     useEffect(() => {loadEvent();}, [id]);
+
+    //function that returns google map embedded into the event card
+    function buildMap(eventLocation)
+    {
+        //base url of the google map api
+        const baseMapURL = "https://maps.googleapis.com/maps/api/staticmap"
+        const params = new URLSearchParams //params to feed into google map api to get the event's location
+        ({
+            center: eventLocation,
+            zoom: "15",
+            size: "600x300",
+            key: import.meta.env.VITE_GOOGLE_MAPS_KEY
+            //TODO: FIGURE OUT WHO'S GETTING THE VITE_GOOGLE_MAPS_KEY
+        });
+        
+        //return the url to the specific event location; will be used for an image
+        return `${baseUrl}?${params}`;
+    }
+
+    //rsvp button
+    async function enterRSVP()
+    {
+        await api.post(`/events/${id}/rsvp`); //post rsvp request to backend
+        setRSVP(true);
+
+    }
+
+    //checks if event is full, used for rsvp button
+    function checkFull()
+    {
+        if(event.attendees.length >= event.max_attendees)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
 
 
 
@@ -73,37 +113,19 @@ function EventDetails()
                     <p className="Description">{event.description}</p>
                     <span className="CategoryBadge">{event.tags}</span>
                     
+                    {/*passes the event location to get lil image of the map*/}
+                    <img src={buildMap(event.location)} alt={`Map of ${event.location}`}/>
 
-                    {/*smth with the map*/}
+                    {/*rsvp button; disabled will gray it out on its own w/out css*/}
+                    <button onClick={enterRsvp} disabled={checkFull()}> RSVP </button>
 
                 </div>
+
 
                 )
             }
             
-            
-            
-            
-            <div id = "Title">
-                <h1 className="EventTitle">title</h1>
-            </div>
-            
-            <div id = "EventInfo">
-                <p className="Host"></p>
-                <p className="CategoryBadge"></p>
-                <p className="Location"></p>
-                <p className="DateTime"></p>
-                <p className="MaxCapacity"></p>
-                <p className="RSVPCount"></p>
-            </div>
-
-            <div id = "EventDescription">
-                <p className="Description"></p>
-            </div>
-
-            <div id = "Map">
-
-            </div>
+        
 
         </div>
     );
