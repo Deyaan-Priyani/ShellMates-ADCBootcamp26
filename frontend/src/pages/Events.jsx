@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"; //importing from react so we can use
 import api from "/frontend/src/services/api"; //axios instance from env setup
-import EventCard from "../components/EventCard.jsx"; //TODO: CHECK THIS ONCE AYAD DOES EVENTCARDS
+import EventCard from "/frontend/src/components/EventCard.jsx";
 
 //constant of event categories; one will be active at a time
 const eventCategories = 
@@ -25,6 +25,9 @@ function Events()
 
     //for study sessions specifically--when we study we can say what courses we're doing
     const [courseCode, setCourseCode] = useState("");
+
+    //for loading screen; starts as false because we assume we're not loading by default
+    const [isLoading, setLoading] = useState(false);
 
 
     ///////FOR TAB BUTTONS: 
@@ -58,6 +61,8 @@ function Events()
     //(needs to be async as we need to wait for api calls !!!)
     async function loadEvents()
     {
+        setLoading(true);
+
         const filtersAdded = {};  //we define empty obj for events loaded bc this essentially
         //represents the filters we're adding; we start with no filters by default
 
@@ -81,6 +86,7 @@ function Events()
         //using events hook, pass in the events loaded that we jsut got from API and 
         //pass in, loading the events onto the screen
         setEvents(eventsLoaded);
+        setLoading(false);
     }
 
     //^now we call the loadEvents function up there using useEffect, so this triggers whenever we change activeCategory
@@ -111,6 +117,19 @@ function Events()
         setCourseCode(event.target.value);
     }
 
+    //for loading screen: check if there are any events
+    function checkIfNoEvents()
+    {
+        if(events.length === 0)
+        {
+            return true; //return true when there are NO events
+        }
+        else
+        {
+            return false;
+        }
+    }
+
 
     return (
         //all the tabs inside the filter bar
@@ -133,19 +152,30 @@ function Events()
                     className={isActive("Miscellaneous")}>Miscellaneous</button>  
             </div>
 
-        {/*the '&&' is like an if-else. handles course codes */}
-        {shouldShowCourseInput() &&
-            ( <input type="text" placeholder = "Filter by COURSE CODE (e.g CMSC132)"
-                value={courseCode} onChange={ifCourseCode} 
-                />
-            )
+            {/*the '&&' is like an if-else. handles course codes */}
+            {shouldShowCourseInput() &&
+                ( <input type="text" placeholder = "Filter by COURSE CODE (e.g CMSC132)"
+                    value={courseCode} onChange={ifCourseCode} 
+                    />
+                )
+            }
 
-        }
+            {/*maps over every event in the list, and creates actual event cards for each one*/}
+            <div className="EventsList">
+                
+                {   //make skeleton loaidng screen w/ an empty event
+                    isLoading && (<EventCard empty = "" />)
+                }
+                {   //if not loading & no events: place this
+                    !isLoading && checkIfNoEvents && (<h1>No events found--be the first to make your own!</h1>)
+                }
+
+                {   //if not loading & events: we can map normally
+                    !isLoading && !checkIfNoEvents && (events.map((event) => (<EventCard key = {event.id} event={event} />)))
+                }
+            </div>
 
         </div>
-
-        //TODO: events list (will implement once eventcards are ready!!!!!) (^will put before that div)
-            //idea for implementation: in its own div, map over every event in const events to pass as a card
 
     );
 
