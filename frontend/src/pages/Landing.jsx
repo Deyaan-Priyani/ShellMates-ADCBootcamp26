@@ -5,6 +5,7 @@ export default function Landing() {
     const [events, setEvents] = useState([]);
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [search, setSearch] = useState("");
 
     // fetch events
     useEffect(() => {
@@ -31,12 +32,18 @@ export default function Landing() {
         loadData();
     }, []);
 
-    // returns loading screen if loading
+    // Returns loading screen if loading.
     if (loading) {
         return <p>Loading events...</p>;
     }
 
+    // For safety.
     const progressPercent = user?.rankProgress ?? 0;
+
+    // Filters events based on if they contain the search string. 
+    const filteredEvents = events.filter((event) =>
+        event.name.toLowerCase().includes(search.toLowerCase())
+    );
 
     // event list
     return (
@@ -65,6 +72,15 @@ export default function Landing() {
                     </p>
                 </div>
             )}
+            {/* SEARCH BAR */}
+            <div className="search-bar">
+                <input
+                    type="text"
+                    placeholder="Search events..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                />
+            </div>
             {/* HERO */}
             <section className="hero">
                 <h1>
@@ -81,7 +97,7 @@ export default function Landing() {
             <div className="event-list">
                 <h2>Upcoming Events:</h2>
                 <div>
-                    {events.map((event) => (
+                    {filteredEvents.map((event) => (
                         <EventCard key={event.id} event={event} />
                     ))}
                 </div>
