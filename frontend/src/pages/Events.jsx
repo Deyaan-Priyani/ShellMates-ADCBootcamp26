@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"; //importing from react so we can use
+import { useState, useEffect } from "react";
 import api from "/frontend/src/services/api"; //axios instance from env setup
 import EventCard from "/frontend/src/components/EventCard.jsx";
 
@@ -11,26 +11,23 @@ const eventCategories =
     "Miscellaneous"
 ]
 
-//where all the tabs are stored
+
 function Events()
 {
-    ///////CONSTS:
 
-    //decides what the active category is (aka when looking through events, some will be active and some won't bc filters)
+    //decides what the active category is
     const [activeCategory, setActiveCategory] = useState("All"); //used for setting active category when clicked
     //(all is used by default, bc when we start up there's no filter selected yet)
 
-    //list of all events--starts off empty bc no events yet (we pull those from the backend)
+    //list of all events (starts empty)
     const [events, setEvents] = useState([]); //used for setting events we see on screen
 
     //for study sessions specifically--when we study we can say what courses we're doing
     const [courseCode, setCourseCode] = useState("");
 
-    //for loading screen; starts as false because we assume we're not loading by default
+    //for loading screen
     const [isLoading, setLoading] = useState(false);
 
-
-    ///////FOR TAB BUTTONS: 
 
     //function that handles clicking and setting the active tab
     //TODO: necessary?
@@ -91,7 +88,7 @@ function Events()
 
     //^now we call the loadEvents function up there using useEffect, so this triggers whenever we change activeCategory
     useEffect(() => {loadEvents();}, [activeCategory, courseCode]);
-    //(when activeCategory changes, call loadEvents, activeCategory is dependency)
+    //(when activeCategory changes, call loadEvents, activeCategory & courseCode are dependencies)
 
 
     ///////////COURSE FILTERS:
@@ -133,7 +130,6 @@ function Events()
 
     return (
         //all the tabs inside the filter bar
-        //TODO: is key supposed to be in brackets or quotations?
         <div>
             <div id = "FilterBar">
                 <button key="All"  onClick={() => setActiveCategory("All")} 
@@ -167,7 +163,7 @@ function Events()
                     isLoading && (<EventCard empty = "" />)
                 }
                 {   //if not loading & no events: place this
-                    !isLoading && checkIfNoEvents && (<h1>No events found--be the first to make your own!</h1>)
+                    !isLoading && checkIfNoEvents && (<h1>No events found; try making your own!</h1>)
                 }
 
                 {   //if not loading & events: we can map normally
@@ -184,5 +180,5 @@ function Events()
 
 
 
-export default App;
+export default Events;
 
