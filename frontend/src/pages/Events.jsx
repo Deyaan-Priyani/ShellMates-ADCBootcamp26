@@ -166,8 +166,11 @@ function Events()
                     !isLoading && checkIfNoEvents && (<h1>No events found; try making your own!</h1>)
                 }
 
-                {   //if not loading & events: we can map normally
-                    !isLoading && !checkIfNoEvents && (events.map((event) => (<EventCard key = {event.id} event={event} />)))
+                {   //if not loading & events: we can map normally, and make the event cards clickable
+                    !isLoading && !checkIfNoEvents && (events.map((event) => 
+                        (<div key = {event.id} onClick = {() => onEventClick(event.id)}>
+                            <EventCard event={event} />
+                        </div>)))
                 }
             </div>
 

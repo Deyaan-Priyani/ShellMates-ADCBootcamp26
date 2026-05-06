@@ -46,6 +46,44 @@ function EventDetails()
 
     return (
         <div>
+            {/*to handle loading: this goes on the outside of Everything*/}
+            
+            { //if loading, prints that to screen
+                isLoading && (<p>Loading event...</p>)
+            }
+            {
+                !isLoading && event === null && (<p>Couldn't find event</p>)
+            }
+            { //if not loading & event is real, we handle Everything Else
+
+                //TODO: double check if these are the right fields from the event obj
+                //(also what field the badge is, i'm putting tags for now)
+                //(leaving out host rank badge for now)
+                !isLoading && event !== null && 
+                ( 
+                <div id="EventDetails"> 
+                    
+                    <h1 className="EventTitle">{event.title}</h1>
+                    <p className="Host">Hosted by {event.organizer_email}</p>
+                    <span className="HostBadge"></span> 
+                    <p className="Location">Location: {event.location}</p>
+                    <span className="DateTime">Time: {event.date}</span>
+                    <span className="RSVPCount">{event.attendees.length} Terps are attending</span>
+                    <span className="MaxCapacity">Up to {event.max_attendees} allowed</span>
+                    <p className="Description">{event.description}</p>
+                    <span className="CategoryBadge">{event.tags}</span>
+                    
+
+                    {/*smth with the map*/}
+
+                </div>
+
+                )
+            }
+            
+            
+            
+            
             <div id = "Title">
                 <h1 className="EventTitle">title</h1>
             </div>
