@@ -23,6 +23,9 @@ const Navbar = () => {
                 <li>
                     <Link to="/profile">Profile</Link>
                 </li>
+                <li>
+                    <Link to="/create">Create Event</Link>
+                </li>
             </ul>
 
             {/*User Info. If user does not exist, shows link to login page.*/}

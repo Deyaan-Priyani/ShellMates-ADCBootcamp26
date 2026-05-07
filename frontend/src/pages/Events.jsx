@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import api from "/frontend/src/services/api"; //axios instance from env setup
 import EventCard from "/frontend/src/components/EventCard.jsx";
+import { useNavigate } from "react-router-dom";
 
 //constant of event categories; one will be active at a time
 const eventCategories = 
@@ -131,6 +132,13 @@ function Events()
     return (
         //all the tabs inside the filter bar
         <div>
+
+            <div className="EventsHeader">
+                <h1>Events</h1>
+                <button onClick={() => navigate("/create")}>Create Event</button>
+            </div>
+
+
             <div id = "FilterBar">
                 <button key="All"  onClick={() => setActiveCategory("All")} 
                     className={isActive("All")}>All</button> 
