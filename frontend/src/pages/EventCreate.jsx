@@ -29,6 +29,57 @@ function EventCreate()
     //for creating event, if not fully filled out
     const [errorText, setErrorText] = useState("");
 
+    //for location suggestions; autocompletes location suggestions
+    const [locationSuggestions, setLocationSuggestions] = useState([]);
+
+    //location list
+    const campusLocations = 
+    [
+        "Stamp Student Union",
+        "McKeldin Library",
+        "Eppley Recreation Center",
+        "Riggs Alumni Center",
+        "Clarice Smith Performing Arts Center",
+        "Cole Field House",
+        "Byrd Stadium",
+    ];
+
+    const locationCoordinates = 
+    {
+        "Stamp Student Union": "38.9888,-76.9444",
+        "McKeldin Library": "38.9858,-76.9448",
+        "Eppley Recreation Center": "38.9923,-76.9430",
+        "Cole Field House": "38.9960,-76.9446",
+        "Clarice Smith Performing Arts Center": "38.9834,-76.9448",
+    }
+
+    function handleLocationChange(input) 
+    {
+        const typed = input.target.value;
+        setLocation(typed);
+
+        //filter down to only typed location
+        if (typed.length > 0) 
+        {
+            const matches = campusLocations.filter((spot) =>
+            spot.toLowerCase().includes(typed.toLowerCase())
+            );
+            setLocationSuggestions(matches);
+        } 
+        else 
+        {
+            //set to empty if nothing matches
+            setLocationSuggestions([]);
+        }
+    }
+
+    function handleLocationSelect(spot) 
+    {
+        setLocation(spot);
+        setLocationSuggestions([]);
+        //once location is picked, we hide the suggestions
+    }  
+
 
     //this checks every field and makes sure that something was inputted for all of them
     function checkSubmition()
@@ -121,8 +172,12 @@ function EventCreate()
             onChange={(input) => setDescription(input.target.value)} />
 
         {/*location:*/}
-        <input type="text" placeholder = "Enter a location"
-            value={location} onChange={(input) => setLocation(input.target.value)} />
+        <input type="text" placeholder="Search campus locations" value={location} onChange={handleLocationChange}/>
+
+        {/*now the location suggestion dropdown*/}
+        {locationSuggestions.length > 0 && (<div className="Suggestions">
+            {locationSuggestions.map((spot) => (<div key={spot} onClick={() => handleLocationSelect(spot)}>
+            {spot} </div> ))} </div> )}
 
         {/*date:*/}
         <input type="text" placeholder = "Enter a date"

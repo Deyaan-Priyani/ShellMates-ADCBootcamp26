@@ -47,15 +47,17 @@ function EventDetails()
     //function that returns google map embedded into the event card
     function buildMap(eventLocation)
     {
-        //base url of the google map api
-        const baseMapURL = "https://maps.googleapis.com/maps/api/staticmap"
-        const params = new URLSearchParams //params to feed into google map api to get the event's location
+        //coordinates
+        const coordinates = locationCoordinates[eventLocation];
+        
+        //base url of openstreetmaps 
+        const baseMapURL = "https://staticmap.openstreetmap.de/staticmap.php"
+        const params = new URLSearchParams //params to feed into openstreetmaps to get the event's location
         ({
-            center: eventLocation,
+            center: coordinates,
             zoom: "15",
             size: "600x300",
-            key: import.meta.env.VITE_GOOGLE_MAPS_KEY
-            //TODO: FIGURE OUT WHO'S GETTING THE VITE_GOOGLE_MAPS_KEY
+            maptype: "mapnik",
         });
         
         //return the url to the specific event location; will be used for an image
