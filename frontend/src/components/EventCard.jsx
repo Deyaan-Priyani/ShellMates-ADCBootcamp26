@@ -1,5 +1,5 @@
 import { useAuth } from "../context/AuthContext"
-import { RankBadge} from "./RankBadge"
+import RankBadge from "./RankBadge"
 
 const EventCard = ({ event }) => {
     const { user } = useAuth();
@@ -36,3 +36,5 @@ const EventCard = ({ event }) => {
     )
 
 }
+
+export default EventCard;
