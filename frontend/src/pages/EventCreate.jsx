@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"; 
 import { useParams } from "react-router-dom";
-import api from "/frontend/src/services/api"; //axios instance from env setup
+import api from "../services/api"; //axios instance from env setup
 import { useNavigate } from "react-router-dom";
 
 function EventCreate()
@@ -43,15 +43,6 @@ function EventCreate()
         "Cole Field House",
         "Byrd Stadium",
     ];
-
-    const locationCoordinates = 
-    {
-        "Stamp Student Union": "38.9888,-76.9444",
-        "McKeldin Library": "38.9858,-76.9448",
-        "Eppley Recreation Center": "38.9923,-76.9430",
-        "Cole Field House": "38.9960,-76.9446",
-        "Clarice Smith Performing Arts Center": "38.9834,-76.9448",
-    }
 
     function handleLocationChange(input) 
     {
@@ -125,7 +116,7 @@ function EventCreate()
     }
 
     //function called when submit button clicked to create the event
-    function submitEvent()
+    async function submitEvent()
     {
         const error = checkSubmition();
         //checks for error; if there is one, we stop the function here and set an error message
@@ -146,8 +137,10 @@ function EventCreate()
             max_capacity: parseInt(maxCapacity), //converting into number
         }
 
+        const eventCreated = await api.post("/events/create", newEvent);
+
         //now, we move to the detail page of the newly created event
-        navigate(`/events/${response.data.id}`);
+        navigate(`/events/${eventCreated.data.id}`);
         //TODO: is 'response.data.id' correct? check w/ backend
         
     } //q's: what does the T do? isn't max_capacity already a number?
@@ -180,12 +173,12 @@ function EventCreate()
             {spot} </div> ))} </div> )}
 
         {/*date:*/}
-        <input type="text" placeholder = "Enter a date"
-            value={date} onChange={(input) => setLocation(input.target.value)} />
+        <input type="date" placeholder = "Enter a date"
+            value={date} onChange={(input) => setDate(input.target.value)} />
 
         {/*time:*/}
         <input type="time" placeholder = "Enter a time"
-            value={time} onChange={(input) => setLocation(input.target.value)} />
+            value={time} onChange={(input) => setTime(input.target.value)} />
 
         {/*max capacity:*/}
         <input type="number" placeholder = "Enter the max capacity" min="1" 

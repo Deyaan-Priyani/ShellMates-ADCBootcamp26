@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import api from "/frontend/src/services/api"; //axios instance from env setup
-import EventCard from "/frontend/src/components/EventCard.jsx";
+import api from "../services/api"; //axios instance from env setup
+import EventCard from "../components/EventCard.jsx";
 import { useNavigate } from "react-router-dom";
 
 //constant of event categories; one will be active at a time
@@ -15,6 +15,7 @@ const eventCategories =
 
 function Events()
 {
+    const navigate = useNavigate();
 
     //decides what the active category is
     const [activeCategory, setActiveCategory] = useState("All"); //used for setting active category when clicked
@@ -29,13 +30,6 @@ function Events()
     //for loading screen
     const [isLoading, setLoading] = useState(false);
 
-
-    //function that handles clicking and setting the active tab
-    //TODO: necessary?
-    function activeCategory(item)
-    {
-        setActiveCategory(item);
-    }
 
     //function that checks in the button if it's active or not
     function isActive(item)
@@ -79,11 +73,11 @@ function Events()
         }
 
         //contact API to get all the events that match these filters, returned into list
-        const eventsLoaded = await api.get("/events", {filtersAdded});
+        const eventsLoaded = await api.get("/events", {params : filtersAdded});
 
         //using events hook, pass in the events loaded that we jsut got from API and 
         //pass in, loading the events onto the screen
-        setEvents(eventsLoaded);
+        setEvents(eventsLoaded.data);
         setLoading(false);
     }
 
@@ -128,6 +122,12 @@ function Events()
         }
     }
 
+    //forgot to add it to this file: event onclick, changes url when clicking an event
+    function onEventClick(eventId) 
+    {
+        navigate(`/events/${eventId}`);
+    }
+
 
     return (
         //all the tabs inside the filter bar
@@ -157,9 +157,9 @@ function Events()
             </div>
 
             {/*the '&&' is like an if-else. handles course codes */}
-            {shouldShowCourseInput() &&
+            {ifCourseCode() &&
                 ( <input type="text" placeholder = "Filter by COURSE CODE (e.g CMSC132)"
-                    value={courseCode} onChange={ifCourseCode} 
+                    value={courseCode} onChange={setCourseFilter} 
                     />
                 )
             }
@@ -171,11 +171,11 @@ function Events()
                     isLoading && (<EventCard empty = "" />)
                 }
                 {   //if not loading & no events: place this
-                    !isLoading && checkIfNoEvents && (<h1>No events found; try making your own!</h1>)
+                    !isLoading && checkIfNoEvents() && (<h1>No events found; try making your own!</h1>)
                 }
 
                 {   //if not loading & events: we can map normally, and make the event cards clickable
-                    !isLoading && !checkIfNoEvents && (events.map((event) => 
+                    !isLoading && !checkIfNoEvents() && (events.map((event) => 
                         (<div key = {event.id} onClick = {() => onEventClick(event.id)}>
                             <EventCard event={event} />
                         </div>)))

@@ -1,9 +1,8 @@
 //detail page that shows the details of an event after you click on the eventcard
-//TODO: set up router? (is that my responsibility or someone else's?)
 
 import { useState, useEffect } from "react"; 
 import { useParams } from "react-router-dom";
-import api from "/frontend/src/services/api"; //axios instance from env setup
+import api from "../services/api"; //axios instance from env setup
 import { useNavigate } from "react-router-dom";
 
 function EventDetails()
@@ -15,6 +14,17 @@ function EventDetails()
     const [event, setEvent] = useState(null);
     const [isLoading, setLoading] = useState(false);
     const [isRSVP, setRSVP] = useState(false);
+
+    //for the map
+    const locationCoordinates = 
+    {
+        "Stamp Student Union": "38.9888,-76.9444",
+        "McKeldin Library": "38.9858,-76.9448",
+        "Eppley Recreation Center": "38.9923,-76.9430",
+        "Cole Field House": "38.9960,-76.9446",
+        "Clarice Smith Performing Arts Center": "38.9834,-76.9448",
+    }
+
 
     //lets us change the url when going to the details section
     const navigate = useNavigate()
@@ -33,12 +43,6 @@ function EventDetails()
         //TODO: use backend to set initial RSVP state 
         //(smth like: setRSVP(currEvent.[[wtv they call has_rsvped]]));
         setLoading(false);
-    }
-
-    //for clicking the event:
-    function onEventClick(currId) 
-    {
-        navigate(`/events/${currId}`);
     }
 
     //call loadEvent whenever id changes
@@ -61,7 +65,7 @@ function EventDetails()
         });
         
         //return the url to the specific event location; will be used for an image
-        return `${baseUrl}?${params}`;
+        return `${baseMapURL}?${params}`;
     }
 
     //rsvp button
@@ -71,7 +75,6 @@ function EventDetails()
         setRSVP(true);
 
         //create new obj and passes in
-        //TODO: again check if 'rsvp_count' is the right name with backend
         setEvent({ ...event, rsvp_count: event.rsvp_count + 1});
 
     }
@@ -83,7 +86,6 @@ function EventDetails()
         setRSVP(false);
 
                 //create new obj and passes in
-        //TODO: again check if 'rsvp_count' is the right name with backend
         setEvent({ ...event, rsvp_count: event.rsvp_count - 1});
 
     }
@@ -91,7 +93,7 @@ function EventDetails()
     //checks if event is full, used for rsvp button
     function checkFull()
     {
-        if(event.attendees.length >= event.max_attendees)
+        if(event.rsvp_count >= event.max_capacity)
         {
             return true;
         }
@@ -115,9 +117,7 @@ function EventDetails()
             }
             { //if not loading & event is real, we handle Everything Else
 
-                //TODO: double check if these are the right fields from the event obj
-                //(also what field the badge is, i'm putting tags for now)
-                //(leaving out host rank badge for now)
+                //TODO: which is host_rank??
                 !isLoading && event !== null && 
                 ( 
                 <div id="EventDetails"> 
@@ -127,8 +127,8 @@ function EventDetails()
                     <span className="HostBadge"></span> 
                     <p className="Location">Location: {event.location}</p>
                     <span className="DateTime">Time: {event.date}</span>
-                    <span className="RSVPCount">{event.attendees.length} Terps are attending</span>
-                    <span className="MaxCapacity">Up to {event.max_attendees} allowed</span>
+                    <span className="RSVPCount">{event.rsvp_count} Terps are attending</span>
+                    <span className="MaxCapacity">Up to {event.max_capacity} allowed</span>
                     <p className="Description">{event.description}</p>
                     <span className="CategoryBadge">{event.tags}</span>
                     
@@ -136,7 +136,7 @@ function EventDetails()
                     <img src={buildMap(event.location)} alt={`Map of ${event.location}`}/>
 
                     {/*rsvp button; disabled will gray it out on its own w/out css*/}
-                    {!isRSVP && (<button onClick={enterRsvp} disabled={checkFull()}> RSVP </button>)}
+                    {!isRSVP && (<button onClick={enterRSVP} disabled={checkFull()}> RSVP </button>)}
                     
                     {/*cancel rsvp button*/}
                     {isRSVP && (<button onClick={cancelRSVP}>Cancel RSVP</button>)}
