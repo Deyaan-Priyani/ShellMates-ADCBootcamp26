@@ -1,8 +1,8 @@
 from datetime import datetime
-from typing import List
+from typing import List, Optional
 
 from bson import ObjectId
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 from app.db.mongo import db
 from app.middleware.firebase_auth import verify_token
@@ -19,9 +19,13 @@ def _to_object_id(object_id: str) -> ObjectId:
 
 
 @router.get("/", response_model=List[EventInDB])
-async def get_events():
+async def get_events(category: Optional[str] = Query(None)):
+    query = {}
+    if category and category != "All":
+        query["category"] = category
+
     events = []
-    async for event in db.events.find():
+    async for event in db.events.find(query):
         events.append(EventInDB(**event))
     return events
 
@@ -36,11 +40,18 @@ async def get_event(event_id: str):
 
 @router.post("/", response_model=EventInDB)
 async def create_event(event: EventCreate, user_data: dict = Depends(verify_token)):
-    event_dict = event.dict()
-    event_dict["organizer_email"] = user_data["email"]
-    event_dict["attendees"] = []
-    event_dict["created_at"] = datetime.utcnow()
-    event_dict["updated_at"] = datetime.utcnow()
+    event_dict = {
+        "title": event.title,
+        "category": event.category,
+        "description": event.description,
+        "location": event.location,
+        "date": event.date_time,
+        "max_attendees": event.max_capacity,
+        "organizer_email": user_data["email"],
+        "attendees": [],
+        "created_at": datetime.utcnow(),
+        "updated_at": datetime.utcnow(),
+    }
 
     result = await db.events.insert_one(event_dict)
     created = await db.events.find_one({"_id": result.inserted_id})
@@ -62,7 +73,7 @@ async def update_event(event_id: str, event_update: EventUpdate, user_data: dict
     if existing_event["organizer_email"] != user_data["email"]:
         raise HTTPException(status_code=403, detail="Only the organizer can update this event")
 
-    update_data = event_update.dict(exclude_none=True)
+    update_data = event_update.model_dump(exclude_none=True)
     if not update_data:
         raise HTTPException(status_code=400, detail="No update data provided")
     update_data["updated_at"] = datetime.utcnow()
@@ -88,8 +99,8 @@ async def delete_event(event_id: str, user_data: dict = Depends(verify_token)):
     return {"message": "Event deleted successfully"}
 
 
-@router.post("/{event_id}/attend")
-async def attend_event(event_id: str, user_data: dict = Depends(verify_token)):
+@router.post("/{event_id}/rsvp")
+async def rsvp_event(event_id: str, user_data: dict = Depends(verify_token)):
     event = await db.events.find_one({"_id": _to_object_id(event_id)})
     if not event:
         raise HTTPException(status_code=404, detail="Event not found")
@@ -110,8 +121,8 @@ async def attend_event(event_id: str, user_data: dict = Depends(verify_token)):
     return {"message": "Successfully registered for event"}
 
 
-@router.delete("/{event_id}/attend")
-async def unattend_event(event_id: str, user_data: dict = Depends(verify_token)):
+@router.delete("/{event_id}/rsvp")
+async def cancel_rsvp(event_id: str, user_data: dict = Depends(verify_token)):
     event = await db.events.find_one({"_id": _to_object_id(event_id)})
     if not event:
         raise HTTPException(status_code=404, detail="Event not found")
