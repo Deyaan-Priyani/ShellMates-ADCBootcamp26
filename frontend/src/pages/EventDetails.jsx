@@ -4,7 +4,6 @@
 import { useState, useEffect } from "react"; 
 import { useParams } from "react-router-dom";
 import api from "/frontend/src/services/api"; //axios instance from env setup
-import EventCard from "/frontend/src/components/EventCard.jsx";
 import { useNavigate } from "react-router-dom";
 
 function EventDetails()
@@ -31,6 +30,8 @@ function EventDetails()
         //set it
         setEvent(currEvent.data);
 
+        //TODO: use backend to set initial RSVP state 
+        //(smth like: setRSVP(currEvent.[[wtv they call has_rsvped]]));
         setLoading(false);
     }
 
@@ -66,6 +67,22 @@ function EventDetails()
     {
         await api.post(`/events/${id}/rsvp`); //post rsvp request to backend
         setRSVP(true);
+
+        //create new obj and passes in
+        //TODO: again check if 'rsvp_count' is the right name with backend
+        setEvent({ ...event, rsvp_count: event.rsvp_count + 1});
+
+    }
+
+    //cancel rsvp
+    async function cancelRSVP()
+    {
+        await api.delete(`/events/${id}/rsvp`); //delete the rsvp from backend
+        setRSVP(false);
+
+                //create new obj and passes in
+        //TODO: again check if 'rsvp_count' is the right name with backend
+        setEvent({ ...event, rsvp_count: event.rsvp_count - 1});
 
     }
 
@@ -117,7 +134,11 @@ function EventDetails()
                     <img src={buildMap(event.location)} alt={`Map of ${event.location}`}/>
 
                     {/*rsvp button; disabled will gray it out on its own w/out css*/}
-                    <button onClick={enterRsvp} disabled={checkFull()}> RSVP </button>
+                    {!isRSVP && (<button onClick={enterRsvp} disabled={checkFull()}> RSVP </button>)}
+                    
+                    {/*cancel rsvp button*/}
+                    {isRSVP && (<button onClick={cancelRSVP}>Cancel RSVP</button>)}
+                    
 
                 </div>
 
