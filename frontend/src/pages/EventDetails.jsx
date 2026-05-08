@@ -5,6 +5,7 @@ import { useParams } from "react-router-dom";
 import api from "../services/api"; //axios instance from env setup
 import { useNavigate } from "react-router-dom";
 import { auth } from "../services/firebase";
+import RankBadge from "../components/RankBadge";
 
 function EventDetails()
 {
@@ -169,7 +170,7 @@ function EventDetails()
                 
                     <h1 className="EventTitle">{event.title}</h1>
                     <p className="Host">Hosted by {event.organizer_email}</p>
-                    <span className="HostBadge">{rankBadge}</span> 
+                    <span className="HostBadge"><RankBadge tier={rankBadge} /></span> 
                     <p className="Location">Location: {event.location}</p>
                     <span className="DateTime">Time: {event.date}</span>
                     <span className="RSVPCount">{event.attendees.length} Terps are attending</span>

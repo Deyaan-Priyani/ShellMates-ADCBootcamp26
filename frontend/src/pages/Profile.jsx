@@ -72,9 +72,9 @@ export default function Profile() {
             </div>
             <div className="rank-strip">
                 <div>
-                    <div style={{ width: `${progressPercent}%` }} />
+                    <div style={{ width: `${(progressPercent / 20) * 100}%` }} />
                 </div>
-                <p>{profile.rankProgress} / 20 events</p>
+                <p>{profile.rankProgress} / 20</p>
             </div>
 
             <div className="rsvp-created-menu">
