@@ -94,6 +94,12 @@ a {
   overflow: hidden;
 }
 
+.hero-buttons {
+    display: grid;
+    grid-template-columns: repeat(n, 1fr);
+    gap: 10px;
+}
+
 .hero::before {
   content: "";
   position: absolute;
@@ -899,4 +905,9 @@ a {
 .no-events p {
   font-size: 0.95rem;
   margin-bottom: 14px;
+}
+
+.landing-picture {
+    width: 100%;
+  height: 100%;
 }

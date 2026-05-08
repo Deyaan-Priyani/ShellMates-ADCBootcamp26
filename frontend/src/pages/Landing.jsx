@@ -83,14 +83,28 @@ export default function Landing() {
       {/* HERO */}
       <section className="hero">
         <h1>Welcome to Shell Mates</h1>
-        <p>Discover events around campus</p>
-        <button
-          className="create-event-button"
-          onClick={() => navigate("/events/create")}
-        >
-          Create Event
-        </button>
+        <p>Discover events around campus and create your own!</p>
+        <div className="hero-buttons">
+          <button
+            className="create-event-button"
+            onClick={() => navigate("/events/create")}
+          >
+            Create Event
+          </button>
+          <button
+            className="create-event-button"
+            onClick={() => navigate("/events")}
+          >
+            Discover events
+          </button>
+        </div>
       </section>
+      {/*image*/}
+      <img src="testudopicture.jpg" class="landing-picture"></img>
+
+      {/*image*/}
+      <footer>hello</footer>
+
     </>
   );
 }
