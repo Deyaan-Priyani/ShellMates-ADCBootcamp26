@@ -72,7 +72,8 @@ function EventDetails()
     //call loadEvent whenever id changes
     useEffect(() => {loadEvent();}, [id]);
 
-    //function that returns google map embedded into the event card
+    //function that returns opensteetmaps map embedded into the event card
+    /*  OLD VERSION:
     function buildMap(eventLocation)
     {
         //coordinates
@@ -90,6 +91,18 @@ function EventDetails()
     
         //return the url to the specific event location; will be used for an image
         return `${baseMapURL}?${params}`;
+    }
+    */
+
+    //NEW VERSION: interactable map rather than static image
+    function buildMap(eventLocation)
+    {
+        const coordinates = locationCoordinates[eventLocation];
+        if (!coordinates) return null;
+
+        const [lat, lon] = coordinates.split(",");
+        
+        return `https://www.openstreetmap.org/export/embed.html?bbox=${parseFloat(lon)-0.002},${parseFloat(lat)-0.002},${parseFloat(lon)+0.002},${parseFloat(lat)+0.002}&layer=mapnik&marker=${lat},${lon}`;
     }
 
     //rsvp button
@@ -164,8 +177,11 @@ function EventDetails()
                     <p className="Description">{event.description}</p>
                     <span className="CategoryBadge">{event.category}</span>
                 
-                    {/*passes the event location to get lil image of the map*/}
-                    <img src={buildMap(event.location)} alt={`Map of ${event.location}`}/>
+                    
+                    
+                    {/*passes in the interactable map rather than image*/}
+                    {buildMap(event.location) && (<iframe src={buildMap(event.location)} width="600" height="300"
+                        style={{ border: "none" }} title={`Map of ${event.location}`}/> )}
 
                     {/*rsvp button; disabled will gray it out on its own w/out css*/}
                     {!isRSVP && (<button onClick={enterRSVP} disabled={checkFull()}> RSVP </button>)}
