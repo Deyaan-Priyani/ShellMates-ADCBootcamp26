@@ -15,7 +15,7 @@ export default function Landing() {
         async function loadData() {
             try {
                 const [eventsRes, userRes] = await Promise.all([
-                    fetch("/events"),
+                    fetch("http://localhost:8000/events"),
                     fetch("/auth/me"),
                 ]);
 
@@ -26,7 +26,8 @@ export default function Landing() {
                 setUser(userData);
 
             } catch (err) {
-                console.error("Error fetching events:", err);
+                console.error("Full error:", err.response?.data)
+                setErrorText("Failed to create event. Are you logged in?")
             } finally {
                 setLoading(false);
             }
@@ -92,7 +93,7 @@ export default function Landing() {
                 <p>
                     Discover events around campus
                 </p>
-                <button className="create-event-button" onClick={() => navigate("/events/create")}> 
+                <button className="create-event-button" onClick={() => navigate("/events/create")}>
                     Create Event
                 </button>
             </section>

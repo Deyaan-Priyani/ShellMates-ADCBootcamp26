@@ -5,7 +5,6 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      '/events': 'http://localhost:8000',
       '/auth': 'http://localhost:8000',
       '/users': 'http://localhost:8000',
     }
