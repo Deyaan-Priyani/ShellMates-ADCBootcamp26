@@ -100,10 +100,10 @@ export default function Landing() {
         </div>
       </section>
       {/*image*/}
-      <img src="testudopicture.jpg" class="landing-picture"></img>
+      <img src="testudopicture.jpg" className="landing-picture"></img>
 
       {/*image*/}
-      <footer>hello</footer>
+      <footer className = "footer">Made by Ayad, Deyan, Jessica, and Norrie </footer>
 
     </>
   );
