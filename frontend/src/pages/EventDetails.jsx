@@ -14,6 +14,7 @@ function EventDetails()
     const [event, setEvent] = useState(null);
     const [isLoading, setLoading] = useState(false);
     const [isRSVP, setRSVP] = useState(false);
+    const [rankBadge, setRankBadge] = useState(null);
 
     //for the map
     const locationCoordinates = 
@@ -40,8 +41,20 @@ function EventDetails()
         //set it
         setEvent(currEvent.data);
 
-        //TODO: use backend to set initial RSVP state 
-        //(smth like: setRSVP(currEvent.[[wtv they call has_rsvped]]));
+        //pull out rank badge from user and set it
+        //TODO: use user uid or email?
+        const currUser = await api.get(`/users/${get_user().email}`);
+        setRankBadge(currUser.data.rankBadge); 
+    
+
+        if(currEvent.data.attendees.includes(get_user().email))
+        {
+            setRSVP(true);
+        }
+        else
+        {
+            setRSVP(false);
+        }
         setLoading(false);
     }
 
@@ -53,7 +66,7 @@ function EventDetails()
     {
         //coordinates
         const coordinates = locationCoordinates[eventLocation];
-        
+    
         //base url of openstreetmaps 
         const baseMapURL = "https://staticmap.openstreetmap.de/staticmap.php"
         const params = new URLSearchParams //params to feed into openstreetmaps to get the event's location
@@ -63,7 +76,7 @@ function EventDetails()
             size: "600x300",
             maptype: "mapnik",
         });
-        
+    
         //return the url to the specific event location; will be used for an image
         return `${baseMapURL}?${params}`;
     }
@@ -74,8 +87,9 @@ function EventDetails()
         await api.post(`/events/${id}/rsvp`); //post rsvp request to backend
         setRSVP(true);
 
-        //create new obj and passes in
-        setEvent({ ...event, rsvp_count: event.rsvp_count + 1});
+        //just adds a placeholder person to increment count instantly; this won't actually
+        //affect the backend bc they have the actual list back there
+        setEvent({ ...event, attendees: [...event.attendees, "me"]});
 
     }
 
@@ -85,15 +99,15 @@ function EventDetails()
         await api.delete(`/events/${id}/rsvp`); //delete the rsvp from backend
         setRSVP(false);
 
-                //create new obj and passes in
-        setEvent({ ...event, rsvp_count: event.rsvp_count - 1});
+        //remove an entry from list so count goes down by 1 instantly
+        setEvent({ ...event, attendees: event.attendees.slice(0, -1)});
 
     }
 
     //checks if event is full, used for rsvp button
     function checkFull()
     {
-        if(event.rsvp_count >= event.max_capacity)
+        if(event.attendees.length >= event.max_attendees)
         {
             return true;
         }
@@ -108,7 +122,7 @@ function EventDetails()
     return (
         <div>
             {/*to handle loading: this goes on the outside of Everything*/}
-            
+        
             { //if loading, prints that to screen
                 isLoading && (<p>Loading event...</p>)
             }
@@ -117,38 +131,37 @@ function EventDetails()
             }
             { //if not loading & event is real, we handle Everything Else
 
-                //TODO: which is host_rank??
                 !isLoading && event !== null && 
                 ( 
                 <div id="EventDetails"> 
-                    
+                
                     <h1 className="EventTitle">{event.title}</h1>
                     <p className="Host">Hosted by {event.organizer_email}</p>
-                    <span className="HostBadge"></span> 
+                    <span className="HostBadge">{rankBadge}</span> 
                     <p className="Location">Location: {event.location}</p>
                     <span className="DateTime">Time: {event.date}</span>
-                    <span className="RSVPCount">{event.rsvp_count} Terps are attending</span>
-                    <span className="MaxCapacity">Up to {event.max_capacity} allowed</span>
+                    <span className="RSVPCount">{event.attendees.length} Terps are attending</span>
+                    <span className="MaxCapacity">Up to {event.max_attendees} allowed</span>
                     <p className="Description">{event.description}</p>
-                    <span className="CategoryBadge">{event.tags}</span>
-                    
+                    <span className="CategoryBadge">{event.category}</span>
+                
                     {/*passes the event location to get lil image of the map*/}
                     <img src={buildMap(event.location)} alt={`Map of ${event.location}`}/>
 
                     {/*rsvp button; disabled will gray it out on its own w/out css*/}
                     {!isRSVP && (<button onClick={enterRSVP} disabled={checkFull()}> RSVP </button>)}
-                    
+                
                     {/*cancel rsvp button*/}
                     {isRSVP && (<button onClick={cancelRSVP}>Cancel RSVP</button>)}
-                    
+                
 
                 </div>
 
 
                 )
             }
-            
         
+    
 
         </div>
     );
