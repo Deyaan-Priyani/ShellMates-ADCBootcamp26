@@ -145,7 +145,7 @@ function Events()
 
             <div className="EventsHeader">
                 <h1>Events</h1>
-                <button onClick={() => navigate("/create")}>Create Event</button>
+                <button onClick={() => navigate("/events/create")}>Create Event</button>
             </div>
 
             <div className="search-bar">

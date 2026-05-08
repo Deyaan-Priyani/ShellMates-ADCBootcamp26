@@ -1001,3 +1001,12 @@ div.Suggestions div:hover {
   background-color: #fff5f5;
   color: #CC0000;
 }
+
+
+.footer {
+  color: #939090;
+  display: flex; 
+  justify-content: center; 
+  align-items: center
+
+}
