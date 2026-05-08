@@ -2,14 +2,22 @@ from datetime import datetime
 from typing import Any, List, Optional
 
 from bson import ObjectId
-from pydantic import BaseModel, ConfigDict, Field, GetCoreSchemaHandler, computed_field
+from pydantic import BaseModel, ConfigDict, Field, GetCoreSchemaHandler, GetJsonSchemaHandler, computed_field
+from pydantic.json_schema import JsonSchemaValue
 from pydantic_core import core_schema
 
 
 class PyObjectId(ObjectId):
     @classmethod
     def __get_pydantic_core_schema__(cls, source_type: Any, handler: GetCoreSchemaHandler):
-        return core_schema.no_info_plain_validator_function(cls.validate)
+        return core_schema.no_info_plain_validator_function(
+            cls.validate,
+            serialization=core_schema.plain_serializer_function_ser_schema(str),
+        )
+
+    @classmethod
+    def __get_pydantic_json_schema__(cls, schema: core_schema.CoreSchema, handler: GetJsonSchemaHandler) -> JsonSchemaValue:
+        return {"type": "string"}
 
     @classmethod
     def validate(cls, v):
