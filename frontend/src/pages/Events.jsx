@@ -168,7 +168,9 @@ function Events()
             <div className="EventsList">
                 
                 {   //make skeleton loaidng screen w/ an empty event
-                    isLoading && (<EventCard empty = "" />)
+
+                    // event card trying to read event.name was causing crash - Ayad
+                    isLoading && <p>Loading events...</p>
                 }
                 {   //if not loading & no events: place this
                     !isLoading && checkIfNoEvents() && (<h1>No events found; try making your own!</h1>)
