@@ -19,10 +19,15 @@ def _to_object_id(object_id: str) -> ObjectId:
 
 
 @router.get("/", response_model=List[EventInDB])
-async def get_events(category: Optional[str] = Query(None)):
+async def get_events(
+    category: Optional[str] = Query(None),
+    course: Optional[str] = Query(None),
+):
     query = {}
     if category and category != "All":
         query["category"] = category
+    if course:
+        query["course"] = course
 
     events = []
     async for event in db.events.find(query):
@@ -59,6 +64,7 @@ async def create_event(event: EventCreate, user_data: dict = Depends(verify_toke
     event_dict = {
         "title": event.title,
         "category": event.category,
+        "course": event.course,
         "description": event.description,
         "location": event.location,
         "date": event.date_time,

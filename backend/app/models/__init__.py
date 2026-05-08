@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Any, List, Optional
 
 from bson import ObjectId
-from pydantic import BaseModel, ConfigDict, Field, GetCoreSchemaHandler, GetJsonSchemaHandler, computed_field
+from pydantic import BaseModel, ConfigDict, Field, GetCoreSchemaHandler, GetJsonSchemaHandler, computed_field, model_serializer
 from pydantic.json_schema import JsonSchemaValue
 from pydantic_core import core_schema
 
@@ -35,6 +35,7 @@ class EventCreate(BaseModel):
     location: str = Field(..., min_length=1, max_length=200)
     date_time: datetime
     max_capacity: Optional[int] = Field(None, gt=0)
+    course: Optional[str] = None
 
 
 class EventUpdate(BaseModel):
@@ -50,6 +51,7 @@ class EventInDB(BaseModel):
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
     title: str
     category: str = ""
+    course: Optional[str] = None
     description: str
     location: str
     date: datetime
@@ -64,6 +66,18 @@ class EventInDB(BaseModel):
         arbitrary_types_allowed=True,
         json_encoders={ObjectId: str},
     )
+
+    @model_serializer(mode="wrap")
+    def _serialize(self, handler):
+        data = handler(self)
+        # Expose the document id under both keys so frontend code that reads
+        # `event.id` and `event._id` both work without coupling to FastAPI's
+        # by_alias serialization default.
+        if "_id" in data and "id" not in data:
+            data["id"] = data["_id"]
+        elif "id" in data and "_id" not in data:
+            data["_id"] = data["id"]
+        return data
 
     # Extra fields EventCard expects
     @computed_field
