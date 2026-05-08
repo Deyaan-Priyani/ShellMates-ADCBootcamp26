@@ -91,15 +91,6 @@ export default function Landing() {
           Create Event
         </button>
       </section>
-      {/* EVENT LIST */}
-      <div className="event-list">
-        <h2>Upcoming Events:</h2>
-        <div>
-          {filteredEvents.map((event) => (
-            <EventCard key={event._id} event={event} />
-          ))}
-        </div>
-      </div>
     </>
   );
 }
