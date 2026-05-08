@@ -1,14 +1,17 @@
 import { useEffect, useState } from "react";
 import EventCard from "../components/EventCard";
+import { useNavigate } from "react-router-dom";
 
 export default function Landing() {
     const [events, setEvents] = useState([]);
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
+    const navigate = useNavigate();
 
     // fetch events
     useEffect(() => {
+
         async function loadData() {
             try {
                 const [eventsRes, userRes] = await Promise.all([
@@ -89,7 +92,7 @@ export default function Landing() {
                 <p>
                     Discover events around campus
                 </p>
-                <button className="create-event-button">
+                <button className="create-event-button" onClick={() => navigate("/events/create")}> 
                     Create Event
                 </button>
             </section>
