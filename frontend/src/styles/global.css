@@ -1,0 +1,183 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Inter:wght@300;400;500;600&display=swap');
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+   font-family: 'Inter', sans-serif;
+  background-color: #fff5f5;
+  color: #1a1a1a;
+  min-height: 100vh;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* ── Navbar ── */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #faf9f7;
+  padding: 16px 40px;
+  border-bottom: 1px solid #e8e4de;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.navbar-logo a {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.4rem;
+  font-weight: 900;
+  color: #1a1a1a;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.navbar-logo a:hover {
+  color: #CC0000;
+}
+
+.navbar-links {
+  display: flex;
+  gap: 32px;
+  list-style: none;
+}
+
+.navbar-links li a {
+  color: #555;
+  font-size: 0.88rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  transition: color 0.2s;
+}
+
+.navbar-links li a:hover {
+  color: #CC0000;
+}
+
+.navbar-user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-name {
+  font-size: 0.88rem;
+  color: #555;
+  font-weight: 500;
+}
+
+/* ── Page wrapper ── */
+.page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 40px 32px;
+}
+
+/* ── Hero Section ── */
+.hero {
+  background-color: #fff;
+  border: 1px solid #e8e4de;
+  border-radius: 16px;
+  padding: 70px 40px;
+  margin-bottom: 40px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #CC0000, #ff6b6b, #CC0000);
+}
+
+.hero h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: 3rem;
+  font-weight: 900;
+  color: #1a1a1a;
+  letter-spacing: 0.02em;
+  margin-bottom: 12px;
+  line-height: 1.1;
+}
+
+.hero p {
+  font-size: 1rem;
+  color: #888;
+  margin-bottom: 28px;
+  font-weight: 300;
+  letter-spacing: 0.02em;
+}
+
+.create-event-button {
+  background-color: #CC0000;
+  color: white;
+  border: none;
+  padding: 13px 32px;
+  border-radius: 50px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  letter-spacing: 0.04em;
+  transition: background-color 0.2s, transform 0.15s, box-shadow 0.2s;
+  font-family: 'Inter', sans-serif;
+}
+
+.create-event-button:hover {
+  background-color: #aa0000;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(204, 0, 0, 0.25);
+}
+
+/* ── Rank Strip ── */
+.rank-strip {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background-color: #fff;
+  border: 1px solid #e8e4de;
+  border-radius: 12px;
+  padding: 16px 24px;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+}
+
+.rank-strip p {
+  font-size: 0.82rem;
+  color: #888;
+  margin: 0;
+}
+
+.rank-strip .text-lg {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #CC0000;
+  font-family: 'Playfair Display', serif;
+}
+
+.rank-strip > div:nth-child(2) {
+  flex: 1;
+  background-color: #f0ece6;
+  border-radius: 10px;
+  height: 8px;
+  overflow: hidden;
+  min-width: 100px;
+}
+
+.rank-strip > div:nth-child(2) > div {
+  height: 100%;
+  background: linear-gradient(90deg, #CC0000, #ff9999);
+  border-radius: 10px;
+  transition: width 0.5s ease;
+}
