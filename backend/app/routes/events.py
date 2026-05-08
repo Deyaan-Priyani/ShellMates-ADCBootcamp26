@@ -30,6 +30,22 @@ async def get_events(category: Optional[str] = Query(None)):
     return events
 
 
+@router.get("/mine", response_model=List[EventInDB])
+async def get_my_events(user_data: dict = Depends(verify_token)):
+    events = []
+    async for event in db.events.find({"organizer_email": user_data["email"]}):
+        events.append(EventInDB(**event))
+    return events
+
+
+@router.get("/rsvps", response_model=List[EventInDB])
+async def get_rsvped_events(user_data: dict = Depends(verify_token)):
+    events = []
+    async for event in db.events.find({"attendees": user_data["email"]}):
+        events.append(EventInDB(**event))
+    return events
+
+
 @router.get("/{event_id}", response_model=EventInDB)
 async def get_event(event_id: str):
     event = await db.events.find_one({"_id": _to_object_id(event_id)})
