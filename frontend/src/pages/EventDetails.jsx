@@ -1,158 +1,216 @@
-//detail page that shows the details of an event after you click on the eventcard
+// pages/EventDetails.jsx
+// Shows full details of one event with a working RSVP button.
 
-import { useState, useEffect } from "react"; 
-import { useParams } from "react-router-dom";
-import api from "../services/api"; //axios instance from env setup
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import api from "../services/api";
+import { useAuth } from "../context/AuthContext";
 
-function EventDetails()
-{
-    //NEEDS: title, description, category badge, location, date/time, max capacity, current RSVP count, host's name w/ rank badge
-    //also google map
+const LOCATION_COORDINATES = {
+  "Stamp Student Union": "38.9888,-76.9444",
+  "McKeldin Library": "38.9858,-76.9448",
+  "Eppley Recreation Center": "38.9923,-76.9430",
+  "Cole Field House": "38.9960,-76.9446",
+  "Clarice Smith Performing Arts Center": "38.9834,-76.9448",
+};
 
-    const {id} = useParams(); //pulls id from url
-    const [event, setEvent] = useState(null);
-    const [isLoading, setLoading] = useState(false);
-    const [isRSVP, setRSVP] = useState(false);
+function EventDetails() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const { firebaseUser } = useAuth() || {};
 
-    //for the map
-    const locationCoordinates = 
-    {
-        "Stamp Student Union": "38.9888,-76.9444",
-        "McKeldin Library": "38.9858,-76.9448",
-        "Eppley Recreation Center": "38.9923,-76.9430",
-        "Cole Field House": "38.9960,-76.9446",
-        "Clarice Smith Performing Arts Center": "38.9834,-76.9448",
+  const [event, setEvent] = useState(null);
+  const [isLoading, setLoading] = useState(true);
+  const [isRSVP, setRSVP] = useState(false);
+  const [rsvpLoading, setRsvpLoading] = useState(false);
+  const [rsvpMessage, setRsvpMessage] = useState("");
+
+  // Load event when page opens
+  useEffect(() => {
+    loadEvent();
+  }, [id]);
+
+  async function loadEvent() {
+    setLoading(true);
+    try {
+      const res = await api.get(`/events/${id}`);
+      setEvent(res.data);
+
+      // Check if current user already RSVPed
+      if (firebaseUser?.email) {
+        setRSVP(res.data.attendees?.includes(firebaseUser.email) ?? false);
+      }
+    } catch {
+      setEvent(null);
+    } finally {
+      setLoading(false);
     }
+  }
 
+  // Build static map image from OpenStreetMap
+  function buildMap(eventLocation) {
+    const coordinates = LOCATION_COORDINATES[eventLocation];
+    if (!coordinates) return null;
+    const params = new URLSearchParams({
+      center: coordinates,
+      zoom: "16",
+      size: "600x220",
+      maptype: "mapnik",
+    });
+    return `https://staticmap.openstreetmap.de/staticmap.php?${params}`;
+  }
 
-    //lets us change the url when going to the details section
-    const navigate = useNavigate()
-
-    //for loading events:
-    async function loadEvent()
-    {
-        setLoading(true);
-
-        //fetch event matching the selected event's id from backend
-        const currEvent = await api.get(`/events/${id}`);
-
-        //set it
-        setEvent(currEvent.data);
-
-        //TODO: use backend to set initial RSVP state 
-        //(smth like: setRSVP(currEvent.[[wtv they call has_rsvped]]));
-        setLoading(false);
-    }
-
-    //call loadEvent whenever id changes
-    useEffect(() => {loadEvent();}, [id]);
-
-    //function that returns google map embedded into the event card
-    function buildMap(eventLocation)
-    {
-        //coordinates
-        const coordinates = locationCoordinates[eventLocation];
-        
-        //base url of openstreetmaps 
-        const baseMapURL = "https://staticmap.openstreetmap.de/staticmap.php"
-        const params = new URLSearchParams //params to feed into openstreetmaps to get the event's location
-        ({
-            center: coordinates,
-            zoom: "15",
-            size: "600x300",
-            maptype: "mapnik",
-        });
-        
-        //return the url to the specific event location; will be used for an image
-        return `${baseMapURL}?${params}`;
-    }
-
-    //rsvp button
-    async function enterRSVP()
-    {
-        await api.post(`/events/${id}/rsvp`); //post rsvp request to backend
-        setRSVP(true);
-
-        //create new obj and passes in
-        setEvent({ ...event, rsvp_count: event.rsvp_count + 1});
-
-    }
-
-    //cancel rsvp
-    async function cancelRSVP()
-    {
-        await api.delete(`/events/${id}/rsvp`); //delete the rsvp from backend
+  // Handle RSVP and cancel RSVP
+  async function handleRSVP() {
+    setRsvpLoading(true);
+    setRsvpMessage("");
+    try {
+      if (isRSVP) {
+        // Cancel RSVP
+        await api.delete(`/events/${id}/rsvp`);
         setRSVP(false);
-
-                //create new obj and passes in
-        setEvent({ ...event, rsvp_count: event.rsvp_count - 1});
-
+        setEvent((prev) => ({
+          ...prev,
+          attendees: prev.attendees.filter((e) => e !== firebaseUser.email),
+        }));
+        setRsvpMessage("RSVP cancelled.");
+      } else {
+        // Add RSVP
+        await api.post(`/events/${id}/rsvp`);
+        setRSVP(true);
+        setEvent((prev) => ({
+          ...prev,
+          attendees: [...(prev.attendees || []), firebaseUser.email],
+        }));
+        setRsvpMessage("You are going! See you there 🎉");
+      }
+    } catch (err) {
+      setRsvpMessage(err.response?.data?.detail || "Something went wrong.");
+    } finally {
+      setRsvpLoading(false);
     }
+  }
 
-    //checks if event is full, used for rsvp button
-    function checkFull()
-    {
-        if(event.rsvp_count >= event.max_capacity)
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
-    }
+  // Check if event is at max capacity
+  function isFull() {
+    if (!event.max_attendees) return false;
+    return event.attendees.length >= event.max_attendees;
+  }
 
+  // Format date nicely
+  function formatDate(dateStr) {
+    if (!dateStr) return "";
+    return new Date(dateStr).toLocaleString("en-US", {
+      weekday: "long",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
 
+  if (isLoading) return <p style={{ padding: "20px" }}>Loading event...</p>;
 
+  if (!event)
     return (
-        <div>
-            {/*to handle loading: this goes on the outside of Everything*/}
-            
-            { //if loading, prints that to screen
-                isLoading && (<p>Loading event...</p>)
-            }
-            {
-                !isLoading && event === null && (<p>Couldn't find event</p>)
-            }
-            { //if not loading & event is real, we handle Everything Else
-
-                //TODO: which is host_rank??
-                !isLoading && event !== null && 
-                ( 
-                <div id="EventDetails"> 
-                    
-                    <h1 className="EventTitle">{event.title}</h1>
-                    <p className="Host">Hosted by {event.organizer_email}</p>
-                    <span className="HostBadge"></span> 
-                    <p className="Location">Location: {event.location}</p>
-                    <span className="DateTime">Time: {event.date}</span>
-                    <span className="RSVPCount">{event.rsvp_count} Terps are attending</span>
-                    <span className="MaxCapacity">Up to {event.max_capacity} allowed</span>
-                    <p className="Description">{event.description}</p>
-                    <span className="CategoryBadge">{event.tags}</span>
-                    
-                    {/*passes the event location to get lil image of the map*/}
-                    <img src={buildMap(event.location)} alt={`Map of ${event.location}`}/>
-
-                    {/*rsvp button; disabled will gray it out on its own w/out css*/}
-                    {!isRSVP && (<button onClick={enterRSVP} disabled={checkFull()}> RSVP </button>)}
-                    
-                    {/*cancel rsvp button*/}
-                    {isRSVP && (<button onClick={cancelRSVP}>Cancel RSVP</button>)}
-                    
-
-                </div>
-
-
-                )
-            }
-            
-        
-
-        </div>
+      <div className="page">
+        <p>Event not found.</p>
+        <button className="btn-secondary" onClick={() => navigate("/events")}>
+          Back to Events
+        </button>
+      </div>
     );
-}
 
+  const mapUrl = buildMap(event.location);
+  const hostName = event.organizer_email?.split("@")[0] || "Unknown";
+  const attendeeCount = event.attendees?.length ?? 0;
+
+  return (
+    <div className="page">
+      {/* Back button */}
+      <button
+        className="btn-secondary"
+        onClick={() => navigate("/events")}
+        style={{ marginBottom: "16px" }}
+      >
+        ← Back to Events
+      </button>
+
+      <div className="event-detail">
+        {/* Category badge */}
+        <span className="category-badge">{event.category}</span>
+
+        {/* Title */}
+        <h1>{event.title}</h1>
+
+        {/* Host */}
+        <p>
+          👤 Hosted by <strong>{hostName}</strong>
+        </p>
+
+        {/* Location */}
+        <p>📍 {event.location}</p>
+
+        {/* Date */}
+        <p>🕐 {formatDate(event.date)}</p>
+
+        {/* Attendee count */}
+        <p>
+          👥 {attendeeCount}
+          {event.max_attendees ? ` / ${event.max_attendees}` : ""} attending
+          {isFull() && (
+            <span style={{ color: "#CC0000", marginLeft: "8px" }}>(Full)</span>
+          )}
+        </p>
+
+        {/* Description */}
+        <p style={{ marginTop: "14px", lineHeight: "1.7" }}>
+          {event.description}
+        </p>
+
+        {/* Map */}
+        {mapUrl && <img src={mapUrl} alt={`Map of ${event.location}`} />}
+
+        {/* RSVP button */}
+        <div style={{ marginTop: "20px" }}>
+          {!isRSVP ? (
+            <button
+              className="rsvp-btn"
+              onClick={handleRSVP}
+              disabled={isFull() || rsvpLoading}
+            >
+              {rsvpLoading
+                ? "Processing..."
+                : isFull()
+                  ? "Event Full"
+                  : "RSVP to this Event"}
+            </button>
+          ) : (
+            <button
+              className="cancel-btn"
+              onClick={handleRSVP}
+              disabled={rsvpLoading}
+            >
+              {rsvpLoading ? "Processing..." : "Cancel RSVP"}
+            </button>
+          )}
+
+          {/* Confirmation or error message after clicking RSVP */}
+          {rsvpMessage && (
+            <p
+              style={{
+                marginTop: "10px",
+                color: isRSVP ? "green" : "#CC0000",
+                fontWeight: "bold",
+              }}
+            >
+              {rsvpMessage}
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default EventDetails;

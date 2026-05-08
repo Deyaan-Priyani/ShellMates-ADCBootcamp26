@@ -1,115 +1,202 @@
+// pages/Profile.jsx
+// Shows the user's profile, rank, and their events.
+
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { RankBadge } from "../components/RankBadge";
+import EventCard from "../components/EventCard";
+import api from "../services/api";
 
-export default function Proflle() {
-    const { user, loading: authLoading } = useAuth();
+function Profile() {
+  const navigate = useNavigate();
+  const { profile, refreshProfile } = useAuth();
 
-    if (loading) return <div>Loading profile...</div>;
-    if (!user) return <div>Not logged in</div>;
+  const [tab, setTab] = useState("created");
+  const [createdEvents, setCreated] = useState([]);
+  const [attendingEvents, setAttending] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-    const [tab, setTab] = useState("created");
-    const [created, setCreated] = useState([]);
-    const [rsvped, setRsvped] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState("");
+  // Load the user's created and attending events
+  useEffect(() => {
+    async function loadEvents() {
+      if (!profile) return;
+      setLoading(true);
+      try {
+        const res = await api.get("/events");
+        const all = res.data;
 
-    const hasPhoto = Boolean(user.photoUrl);
+        // Filter to events this user created
+        const created = all.filter((e) =>
+          profile.events_created?.includes(e._id),
+        );
 
+        // Filter to events this user RSVPed to
+        const attending = all.filter((e) =>
+          profile.events_attending?.includes(e._id),
+        );
 
-    useEffect(() => {
-        const fetchEvents = async () => {
-            try {
-                setLoading(true);
-                setError("");
+        setCreated(created);
+        setAttending(attending);
+      } catch (err) {
+        console.error("Failed to load profile events:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadEvents();
+  }, [profile]);
 
-                const [createdRes, rsvpRes] = await Promise.all([
-                    fetch("/events/mine", { credentials: "include" }),
-                    fetch("/events/rsvps", { credentials: "include" }),
-                ]);
+  // Cancel an RSVP
+  async function handleCancelRSVP(eventId) {
+    try {
+      await api.delete(`/events/${eventId}/rsvp`);
+      setAttending((prev) => prev.filter((e) => e._id !== eventId));
+      await refreshProfile();
+    } catch (err) {
+      console.error("Failed to cancel RSVP:", err);
+    }
+  }
 
-                // If any one of the results returns an error, throw an error. 
-                if (!createdRes.ok || !rsvpRes.ok) {
-                    throw new Error("Failed to load events");
-                }
+  // Delete an event the user created
+  async function handleDeleteEvent(eventId) {
+    if (!window.confirm("Delete this event?")) return;
+    try {
+      await api.delete(`/events/${eventId}`);
+      setCreated((prev) => prev.filter((e) => e._id !== eventId));
+      await refreshProfile();
+    } catch (err) {
+      console.error("Failed to delete event:", err);
+    }
+  }
 
-                const createdData = await createdRes.json();
-                const rsvpData = await rsvpRes.json();
+  if (!profile) return <p style={{ padding: "20px" }}>Loading profile...</p>;
 
+  // Which events to show based on active tab
+  const eventsToShow = tab === "created" ? createdEvents : attendingEvents;
 
-                setCreated(createdData);
-                setRsvped(rsvpData);
-            } catch (err) {
-                setError(err.message || "Error loading events");
-            } finally {
-                setLoading(false);
-            }
-        };
+  return (
+    <div className="page">
+      <div className="profile-page">
+        {/* User info */}
+        <h1>Profile</h1>
+        <p>Name: {profile.name || profile.email?.split("@")[0]}</p>
+        <p>Terpmail: {profile.email}</p>
 
-        if (user) fetchEvents();
-    }, [user]);
+        {/* Rank badge */}
+        <div style={{ margin: "10px 0" }}>
+          <RankBadge tier={profile.rank} />
+        </div>
 
-    // Loading 
-    if (authLoading || loading) return <div>Loading...</div>;
+        {/* Rank progress bar */}
+        <div className="rank-strip" style={{ marginTop: "16px" }}>
+          <p>Progress to next rank</p>
+          <div className="progress-bar-bg">
+            <div
+              className="progress-bar-fill"
+              style={{ width: `${profile.rankProgress ?? 0}%` }}
+            />
+          </div>
+          <p>{profile.rankProgress ?? 0}%</p>
+        </div>
 
-    // No user exists
-    if (!user) return <div>Not logged in</div>;
+        {/* Stats */}
+        <div style={{ display: "flex", gap: "20px", margin: "16px 0" }}>
+          <p>
+            Events hosted:{" "}
+            <strong>{profile.events_created?.length ?? 0}</strong>
+          </p>
+          <p>
+            Events attending:{" "}
+            <strong>{profile.events_attending?.length ?? 0}</strong>
+          </p>
+        </div>
 
-    // Error thrown 
-    if (error) return <div>{error}</div>;
+        {/* Tab buttons */}
+        <div className="tab-buttons">
+          <button
+            className={tab === "created" ? "active" : ""}
+            onClick={() => setTab("created")}
+          >
+            Events I Created ({createdEvents.length})
+          </button>
+          <button
+            className={tab === "attending" ? "active" : ""}
+            onClick={() => setTab("attending")}
+          >
+            Events I RSVPed To ({attendingEvents.length})
+          </button>
+        </div>
 
-    const events = tab === "created" ? created : rsvped;
-
-    return (
-        <div className="profile-page">
-            {/* Photo/Initials */}
-            <div className="photo">
-                {hasPhoto ? (
-                    <img src={user.photoUrl}></img>
-                ) : (
-                    <div>
-                        {initials}
-                    </div>
-                )}
-            </div>
-            <div>
-                <h1>Profile</h1>
-                <p>Name: {user.name}</p>
-                <p>Terpmail: {user.email}</p>
-                <RankBadge tier={user.rankBadge} />
-            </div>
-            <div className="rank-strip">
-                {/* Progress bar. Will implement class for this to display properly.*/}
-                <div>
-                    <div
-                        style={{ width: `${progressPercent}%` }}
-                    />
+        {/* Event list */}
+        {loading ? (
+          <p>Loading events...</p>
+        ) : eventsToShow.length === 0 ? (
+          <div className="no-events">
+            <p>No events here yet.</p>
+          </div>
+        ) : (
+          <div
+            style={{ display: "flex", flexDirection: "column", gap: "12px" }}
+          >
+            {eventsToShow.map((event) => (
+              <div key={event._id} style={{ position: "relative" }}>
+                {/* Click card to view event */}
+                <div onClick={() => navigate(`/events/${event._id}`)}>
+                  <EventCard event={event} />
                 </div>
 
-                {/* Progress number. TODO: Function which takes rank and returns progress required for next tier. */}
-                <p>
-                    {user.rankProgress} / X
-                </p>
-            </div>
-
-            <div className = "rsvp-created-menu">
-                <button onClick={() => setTab("created")}>
-                    Events I Created
-                </button>
-
-                <button onClick={() => setTab("rsvped")}>
-                    Events I RSVPed To
-                </button>
-            </div>
-
-            <div className = "events-list">
-                {events.length === 0 ? (
-                    <div>No events found</div>
+                {/* Action button on each card */}
+                {tab === "created" ? (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteEvent(event._id);
+                    }}
+                    style={{
+                      position: "absolute",
+                      top: "10px",
+                      right: "10px",
+                      background: "#CC0000",
+                      color: "white",
+                      border: "none",
+                      padding: "4px 10px",
+                      borderRadius: "4px",
+                      cursor: "pointer",
+                      fontSize: "0.78rem",
+                    }}
+                  >
+                    Delete
+                  </button>
                 ) : (
-                    events.map((event) => (
-                        <EventCard key={event._id} event={event} />
-                    ))
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleCancelRSVP(event._id);
+                    }}
+                    style={{
+                      position: "absolute",
+                      top: "10px",
+                      right: "10px",
+                      background: "#CC0000",
+                      color: "white",
+                      border: "none",
+                      padding: "4px 10px",
+                      borderRadius: "4px",
+                      cursor: "pointer",
+                      fontSize: "0.78rem",
+                    }}
+                  >
+                    Cancel RSVP
+                  </button>
                 )}
-            </div>
-
-        </div>
-    );
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }
+
+export default Profile;
