@@ -18,8 +18,9 @@ async def verify_token(authorization: str = Header(...)):
     try:
         decoded = auth.verify_id_token(token)
         email = decoded.get("email", "")
-        if not email.endswith("@umd.edu"):
+        if not email.endswith("@umd.edu") and not email.endswith("@terpmail.umd.edu"):
             raise HTTPException(status_code=403, detail="Only UMD Terpmail addresses allowed")
         return decoded
     except Exception:
+        print("Token verification error:", e)
         raise HTTPException(status_code=401, detail="Token verification failed")
