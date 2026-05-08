@@ -912,10 +912,92 @@ a {
   height: 100%;
 }
 
-.footer {
-  color: #939090;
-  display: flex; 
-  justify-content: center; 
-  align-items: center
+/* ── Create Event Page ── */
+/* Styles the wrapper div that contains the whole form */
+div:has(> input[placeholder="Enter a title"]) {
+  max-width: 620px;
+  margin: 40px auto;
+  padding: 36px;
+  background-color: #fff;
+  border: 1px solid #f0d0d0;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
 
+/* All inputs on the create page */
+div:has(> input[placeholder="Enter a title"]) input,
+div:has(> input[placeholder="Enter a title"]) textarea,
+div:has(> input[placeholder="Enter a title"]) select {
+  width: 100%;
+  padding: 11px 16px;
+  background-color: #fff5f5;
+  border: 1px solid #f0d0d0;
+  border-radius: 10px;
+  color: #1a1a1a;
+  font-size: 0.92rem;
+  font-family: 'Inter', sans-serif;
+  display: block;
+}
+
+div:has(> input[placeholder="Enter a title"]) input:focus,
+div:has(> input[placeholder="Enter a title"]) textarea:focus,
+div:has(> input[placeholder="Enter a title"]) select:focus {
+  outline: none;
+  border-color: #CC0000;
+  box-shadow: 0 0 0 3px rgba(204, 0, 0, 0.08);
+  background-color: #fff;
+}
+
+/* The submit button */
+div:has(> input[placeholder="Enter a title"]) button {
+  background-color: #CC0000;
+  color: white;
+  border: none;
+  padding: 12px 28px;
+  border-radius: 50px;
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  transition: background-color 0.2s, transform 0.15s;
+  align-self: flex-start;
+}
+
+div:has(> input[placeholder="Enter a title"]) button:hover {
+  background-color: #aa0000;
+  transform: translateY(-1px);
+}
+
+/* Error message on create page */
+div:has(> input[placeholder="Enter a title"]) p.error {
+  color: #CC0000;
+  font-size: 0.83rem;
+  background-color: #fef0f0;
+  border: 1px solid #fad0d0;
+  border-radius: 8px;
+  padding: 10px 14px;
+}
+
+/* Location suggestions dropdown */
+div.Suggestions {
+  background-color: #fff;
+  border: 1px solid #f0d0d0;
+  border-top: none;
+  border-radius: 0 0 10px 10px;
+  box-shadow: 0 8px 24px rgba(204, 0, 0, 0.08);
+}
+
+div.Suggestions div {
+  padding: 11px 16px;
+  cursor: pointer;
+  font-size: 0.88rem;
+  color: #555;
+  transition: background-color 0.15s;
+}
+
+div.Suggestions div:hover {
+  background-color: #fff5f5;
+  color: #CC0000;
 }
