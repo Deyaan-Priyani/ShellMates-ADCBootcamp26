@@ -30,6 +30,10 @@ function Events()
     //for loading screen
     const [isLoading, setLoading] = useState(false);
 
+    // added search bar - Ayad
+    const [search, setSearch] = useState("");
+
+    
 
     //function that checks in the button if it's active or not
     function isActive(item)
@@ -85,6 +89,10 @@ function Events()
     useEffect(() => {loadEvents();}, [activeCategory, courseCode]);
     //(when activeCategory changes, call loadEvents, activeCategory & courseCode are dependencies)
 
+    // events filtered by search term - Ayad
+    const filteredEvents = events.filter((event) =>
+        (event.title || "").toLowerCase().includes(search.toLowerCase()),
+    );
 
     ///////////COURSE FILTERS:
 
@@ -112,7 +120,7 @@ function Events()
     //for loading screen: check if there are any events
     function checkIfNoEvents()
     {
-        if(events.length === 0)
+        if(filteredEvents.length === 0)
         {
             return true; //return true when there are NO events
         }
@@ -129,6 +137,8 @@ function Events()
     }
 
 
+
+
     return (
         //all the tabs inside the filter bar
         <div>
@@ -138,7 +148,15 @@ function Events()
                 <button onClick={() => navigate("/create")}>Create Event</button>
             </div>
 
-
+            <div className="search-bar">
+                <input
+                type="text"
+                placeholder="Search events..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                />
+            </div>
+      
             <div id = "FilterBar">
                 <button key="All"  onClick={() => setActiveCategory("All")} 
                     className={isActive("All")}>All</button> 
@@ -177,7 +195,7 @@ function Events()
                 }
 
                 {   //if not loading & events: we can map normally, and make the event cards clickable
-                    !isLoading && !checkIfNoEvents() && (events.map((event) => 
+                    !isLoading && !checkIfNoEvents() && (filteredEvents.map((event) => 
                         (<div key = {event.id} onClick = {() => onEventClick(event.id)}>
                             <EventCard event={event} />
                         </div>)))
