@@ -162,10 +162,10 @@ function Events()
                     className={isActive("All")}>All</button> 
                 
                 <button key="PartiesAndPregames"  onClick={() => setActiveCategory("Parties and Pregames")} 
-                    className={isActive("Parties and Pregames")}>PartiesAndPregames</button>
+                    className={isActive("Parties and Pregames")}>Parties & Pregames</button>
 
                 <button key="SportsAndTournaments"  onClick={() => setActiveCategory("Sports and Tournaments")} 
-                    className={isActive("Sports and Tournaments")}>SportsAndTournaments</button> 
+                    className={isActive("Sports and Tournaments")}>Sports & Tournaments</button> 
 
                 <button key="StudySessions"  onClick={() => setActiveCategory("Study Sessions")} 
                     className={isActive("Study Sessions")}>Study Sessions</button>
