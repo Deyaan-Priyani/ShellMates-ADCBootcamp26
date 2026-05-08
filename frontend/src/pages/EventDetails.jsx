@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import api from "../services/api"; //axios instance from env setup
 import { useNavigate } from "react-router-dom";
+import { auth } from "../services/firebase";
 
 function EventDetails()
 {
@@ -41,13 +42,22 @@ function EventDetails()
         //set it
         setEvent(currEvent.data);
 
+        // switched from get_user() to firebase's currentUser - Ayad
+        const currentUser = auth.currentUser
+
+        if (currentUser) {
+            // token required for /me route - Ayad
+            const token = await currentUser.getIdToken()
+            const headers = { Authorization: `Bearer ${token}` }
         //pull out rank badge from user and set it
         //TODO: use user uid or email?
-        const currUser = await api.get(`/users/${get_user().email}`);
+
+        // switched from users/email to users/me because the @ in the email was breaking the url - Ayad
+        const currUser = await api.get(`/users/me`, { headers });
         setRankBadge(currUser.data.rankBadge); 
     
 
-        if(currEvent.data.attendees.includes(get_user().email))
+        if(currEvent.data.attendees.includes(currentUser.email))
         {
             setRSVP(true);
         }
@@ -57,6 +67,7 @@ function EventDetails()
         }
         setLoading(false);
     }
+}
 
     //call loadEvent whenever id changes
     useEffect(() => {loadEvent();}, [id]);
@@ -84,7 +95,11 @@ function EventDetails()
     //rsvp button
     async function enterRSVP()
     {
-        await api.post(`/events/${id}/rsvp`); //post rsvp request to backend
+        // added auth token - Ayad
+        const token = await auth.currentUser.getIdToken()
+            await api.post(`/events/${id}/rsvp`, {}, {
+                headers: { Authorization: `Bearer ${token}` }
+            });; //post rsvp request to backend
         setRSVP(true);
 
         //just adds a placeholder person to increment count instantly; this won't actually
@@ -96,7 +111,11 @@ function EventDetails()
     //cancel rsvp
     async function cancelRSVP()
     {
-        await api.delete(`/events/${id}/rsvp`); //delete the rsvp from backend
+        // also added an auth token here - Ayad
+        const token = await auth.currentUser.getIdToken()
+            await api.delete(`/events/${id}/rsvp`, {
+            headers: { Authorization: `Bearer ${token}` }
+            }); //delete the rsvp from backend
         setRSVP(false);
 
         //remove an entry from list so count goes down by 1 instantly

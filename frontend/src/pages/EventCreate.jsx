@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import api from "../services/api"; //axios instance from env setup
 import { useNavigate } from "react-router-dom";
+import { getAuth } from "firebase/auth"
+
 
 
 function EventCreate() {
@@ -134,7 +136,8 @@ function EventCreate() {
                 headers: { Authorization: `Bearer ${token}` }
             })
             //now, we move to the detail page of the newly created event
-            navigate(`/events/${eventCreated.data.id}`);
+            // you forgot the underscore -Ayad 
+            navigate(`/events/${eventCreated.data._id}`);
             //TODO: is 'response.data.id' correct? check w/ backend
         } catch (err) {
             setErrorText("Failed to create event. Are you logged in?")
