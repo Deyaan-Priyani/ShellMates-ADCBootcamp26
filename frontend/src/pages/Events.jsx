@@ -183,7 +183,7 @@ function Events()
             }
 
             {/*maps over every event in the list, and creates actual event cards for each one*/}
-            <div className="EventsList">
+            <div className="events-list">
                 
                 {   //make skeleton loaidng screen w/ an empty event
 

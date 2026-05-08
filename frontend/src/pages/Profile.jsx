@@ -5,6 +5,10 @@ import EventCard from "../components/EventCard";
 import RankBadge from "../components/RankBadge";
 import api from "../services/api";
 
+function onEventClick(eventId) {
+    navigate(`/events/${eventId}`);
+}
+
 export default function Profile() {
     const { user: firebaseUser, loading: authLoading } = useAuth();
 
@@ -87,7 +91,9 @@ export default function Profile() {
                     <div>No events found</div>
                 ) : (
                     events.map((event) => (
-                        <EventCard key={event._id} event={event} />
+                        <div key={event.id} onClick={() => onEventClick(event.id)}>
+                            <EventCard event={event} />
+                        </div>
                     ))
                 )}
             </div>
