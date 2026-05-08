@@ -1,53 +1,40 @@
-// components/EventCard.jsx
-// Shows one event as a card.
-// Gets the event object as a prop and displays its info.
+import { useAuth } from "../context/AuthContext"
+import RankBadge from "./RankBadge"
 
-function EventCard({ event }) {
-  if (!event) return null;
+const EventCard = ({ event }) => {
+    const { user } = useAuth();
 
-  // How many people are attending
-  const attendeeCount = event.attendees ? event.attendees.length : 0;
+    return (
+        <div className="event-card">
+            <h1>{event.name}</h1>
 
-  // Format the date nicely
-  const formattedDate = event.date
-    ? new Date(event.date).toLocaleDateString("en-US", {
-        weekday: "short",
-        month: "short",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      })
-    : "";
+            {/*When a function that returns a color given a category is implemented put in place of white*/}
+            <span className="category-badge" style={{ color: "white" }}>
+                {event.category}
+            </span>
 
-  return (
-    <div className="event-card">
-      {/* Category badge */}
-      <span className="category-badge">{event.category || "General"}</span>
+            {/*Location + time*/}
+            <div className="location-time">
+                <p>Location: {event.location} </p>
+                <p>Time: {event.time} </p>
+            </div>
 
-      {/* Event title */}
-      <h3>{event.title}</h3>
 
-      {/* Location */}
-      <p>📍 {event.location}</p>
+            {/*RSVP Count / RSVP Capacity*/}
+            <div className="rsvp">
+                <p>RSVP: {event.rsvpCount}/{event.rsvpCap} </p>
+            </div>
 
-      {/* Date */}
-      <p>🕐 {formattedDate}</p>
+            {/*Host info*/}
+            <div className="host-info">
+                <p>
+                    Hosted by: {user.name} <RankBadge tier = {user.rankBadge}/>
+                </p>
+            </div>
 
-      {/* RSVP count */}
-      <p className="rsvp-bar">
-        {attendeeCount}
-        {event.max_attendees ? ` / ${event.max_attendees}` : ""} attending
-      </p>
+        </div>
+    )
 
-      {/* Host - just show the part before the @ */}
-      <p>
-        👤{" "}
-        {event.organizer_email
-          ? event.organizer_email.split("@")[0]
-          : "Unknown"}
-      </p>
-    </div>
-  );
 }
 
 export default EventCard;

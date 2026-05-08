@@ -1,225 +1,198 @@
-// pages/EventCreate.jsx
-// Form to create a new event.
-
-import { useState } from "react";
+import { useState, useEffect } from "react"; 
+import { useParams } from "react-router-dom";
+import api from "../services/api"; //axios instance from env setup
 import { useNavigate } from "react-router-dom";
-import api from "../services/api";
 
-const CATEGORIES = [
-  "Parties and Pregames",
-  "Sports and Tournaments",
-  "Study Sessions",
-  "Miscellaneous",
-];
+function EventCreate()
+{
+    //for the category dropdown:
+    const eventCategoriesSelect = 
+    [
+        "Parties and Pregames",
+        "Sports and Tournaments",
+        "Study Sessions",
+        "Miscellaneous",
+    ];  
+    //doesn't contain "All" because an event cannot have every category
+    
+    const navigate = useNavigate();
 
-const CAMPUS_LOCATIONS = [
-  "Stamp Student Union",
-  "McKeldin Library",
-  "Eppley Recreation Center",
-  "Riggs Alumni Center",
-  "Clarice Smith Performing Arts Center",
-  "Cole Field House",
-  "Byrd Stadium",
-  "Iribe Center",
-];
+    //a var for each field of the event, bc we're gonna need to pull these each out from user's typing
+    const [title, setTitle] = useState("");
+    const [category, setCategory] = useState("");
+    const [description, setDescription] = useState("");
+    const [location, setLocation] = useState("");
+    const [date, setDate] = useState("");
+    const [time, setTime] = useState("");
+    const [maxCapacity, setMaxCapacity] = useState("");
 
-function EventCreate() {
-  const navigate = useNavigate();
+    //for creating event, if not fully filled out
+    const [errorText, setErrorText] = useState("");
 
-  const [title, setTitle] = useState("");
-  const [category, setCategory] = useState("");
-  const [description, setDescription] = useState("");
-  const [location, setLocation] = useState("");
-  const [date, setDate] = useState("");
-  const [time, setTime] = useState("");
-  const [maxCapacity, setMaxCapacity] = useState("");
-  const [errorText, setErrorText] = useState("");
-  const [submitting, setSubmitting] = useState(false);
+    //for location suggestions; autocompletes location suggestions
+    const [locationSuggestions, setLocationSuggestions] = useState([]);
 
-  // Location autocomplete
-  const [locationSuggestions, setLocationSuggestions] = useState([]);
+    //location list
+    const campusLocations = 
+    [
+        "Stamp Student Union",
+        "McKeldin Library",
+        "Eppley Recreation Center",
+        "Riggs Alumni Center",
+        "Clarice Smith Performing Arts Center",
+        "Cole Field House",
+        "Byrd Stadium",
+    ];
 
-  // Filter campus locations as user types
-  function handleLocationChange(e) {
-    const typed = e.target.value;
-    setLocation(typed);
+    function handleLocationChange(input) 
+    {
+        const typed = input.target.value;
+        setLocation(typed);
 
-    if (typed.length > 0) {
-      const matches = CAMPUS_LOCATIONS.filter((spot) =>
-        spot.toLowerCase().includes(typed.toLowerCase()),
-      );
-      setLocationSuggestions(matches);
-    } else {
-      setLocationSuggestions([]);
-    }
-  }
-
-  // When user picks a location from the dropdown
-  function handleLocationSelect(spot) {
-    setLocation(spot);
-    setLocationSuggestions([]);
-  }
-
-  // Check all fields are filled in
-  function validateForm() {
-    if (!title.trim()) return "Please enter a title.";
-    if (!category) return "Please select a category.";
-    if (!description.trim()) return "Please enter a description.";
-    if (!location.trim()) return "Please enter a location.";
-    if (!date) return "Please enter a date.";
-    if (!time) return "Please enter a time.";
-    if (!maxCapacity || parseInt(maxCapacity) < 1)
-      return "Please enter a valid max capacity.";
-    return null;
-  }
-
-  async function submitEvent() {
-    const error = validateForm();
-    if (error) {
-      setErrorText(error);
-      return;
+        //filter down to only typed location
+        if (typed.length > 0) 
+        {
+            const matches = campusLocations.filter((spot) =>
+            spot.toLowerCase().includes(typed.toLowerCase())
+            );
+            setLocationSuggestions(matches);
+        } 
+        else 
+        {
+            //set to empty if nothing matches
+            setLocationSuggestions([]);
+        }
     }
 
-    setErrorText("");
-    setSubmitting(true);
+    function handleLocationSelect(spot) 
+    {
+        setLocation(spot);
+        setLocationSuggestions([]);
+        //once location is picked, we hide the suggestions
+    }  
 
-    try {
-      // date_time combines date + time into one string Python can parse
-      const payload = {
-        title: title.trim(),
-        category,
-        description: description.trim(),
-        location: location.trim(),
-        date_time: `${date}T${time}`,
-        max_capacity: parseInt(maxCapacity),
-      };
 
-      const response = await api.post("/events", payload);
+    //this checks every field and makes sure that something was inputted for all of them
+    function checkSubmition()
+    {
+        if(title === "") 
+        {
+            return "Please enter a title!";
+        }   
+        
+        if(category === "") 
+        {
+            return "Please select a category!";
+        } 
+        
+        if(description === "") 
+        {
+            return "Please enter a description!";
+        } 
 
-      // Go to the new event's detail page
-      navigate(`/events/${response.data._id}`);
-    } catch (err) {
-      const msg = err.response?.data?.detail || "Failed to create event.";
-      setErrorText(msg);
-    } finally {
-      setSubmitting(false);
+        if(location === "") 
+        {
+            return "Please enter a location!";
+        } 
+
+        if(date === "") 
+        {
+            return "Please enter a date!";
+        } 
+
+        if(time === "") 
+        {
+            return "Please enter a time!";
+        } 
+
+        if(maxCapacity === "") 
+        {
+            return "Please enter a maximum capacity!";
+        } 
+
+        //if no errors, continue with null error message
+        return null;
+
     }
-  }
 
-  return (
-    <div className="page">
-      <div className="create-form">
-        <h1>Host an Event</h1>
+    //function called when submit button clicked to create the event
+    async function submitEvent()
+    {
+        const error = checkSubmition();
+        //checks for error; if there is one, we stop the function here and set an error message
+        if (error != null)
+        {
+            setErrorText(error);
+            return;
+        }
 
-        {/* Title */}
-        <div className="form-group">
-          <label>Event Title</label>
-          <input
-            type="text"
-            placeholder="Give your event a name"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-          />
-        </div>
+        //now we gather up everything the user submitted
+        const newEvent =
+        {
+            title: title,
+            category: category,
+            description: description,
+            location: location,
+            date_time: `${date}T${time}`, //making one date and time string
+            max_capacity: parseInt(maxCapacity), //converting into number
+        }
 
-        {/* Category */}
-        <div className="form-group">
-          <label>Category</label>
-          <select
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-          >
+        const eventCreated = await api.post("/events/create", newEvent);
+
+        //now, we move to the detail page of the newly created event
+        navigate(`/events/${eventCreated.data.id}`);
+        //TODO: is 'response.data.id' correct? check w/ backend
+        
+    } //q's: what does the T do? isn't max_capacity already a number?
+
+
+
+    return (
+        <div>
+
+        {/*title:*/}
+        <input type="text" placeholder = "Enter a title"
+            value={title} onChange={(input) => setTitle(input.target.value)} />
+        
+        {/*categories:*/}
+        <select value={category} onChange={(input) => setCategory(input.target.value)}>
             <option value="">Select a category</option>
-            {CATEGORIES.map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
-          </select>
-        </div>
+             {eventCategoriesSelect.map((item) => (<option key={item} value={item}>{item}</option>))}
+            </select>
 
-        {/* Description */}
-        <div className="form-group">
-          <label>Description</label>
-          <textarea
-            placeholder="What's happening? Add any details people should know."
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-          />
-        </div>
+        {/*description:*/}
+        <textarea placeholder = "Enter a description of your event" value={description}
+            onChange={(input) => setDescription(input.target.value)} />
 
-        {/* Location with autocomplete */}
-        <div className="form-group" style={{ position: "relative" }}>
-          <label>Location</label>
-          <input
-            type="text"
-            placeholder="Search campus locations"
-            value={location}
-            onChange={handleLocationChange}
-          />
-          {/* Dropdown suggestions */}
-          {locationSuggestions.length > 0 && (
-            <div className="suggestions">
-              {locationSuggestions.map((spot) => (
-                <div key={spot} onClick={() => handleLocationSelect(spot)}>
-                  📍 {spot}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        {/*location:*/}
+        <input type="text" placeholder="Search campus locations" value={location} onChange={handleLocationChange}/>
 
-        {/* Date and Time side by side */}
-        <div className="form-row">
-          <div className="form-group">
-            <label>Date</label>
-            <input
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-            />
-          </div>
-          <div className="form-group">
-            <label>Time</label>
-            <input
-              type="time"
-              value={time}
-              onChange={(e) => setTime(e.target.value)}
-            />
-          </div>
-        </div>
+        {/*now the location suggestion dropdown*/}
+        {locationSuggestions.length > 0 && (<div className="Suggestions">
+            {locationSuggestions.map((spot) => (<div key={spot} onClick={() => handleLocationSelect(spot)}>
+            {spot} </div> ))} </div> )}
 
-        {/* Max capacity */}
-        <div className="form-group">
-          <label>Max Capacity</label>
-          <input
-            type="number"
-            placeholder="How many people can attend?"
-            min="1"
-            value={maxCapacity}
-            onChange={(e) => setMaxCapacity(e.target.value)}
-          />
-        </div>
+        {/*date:*/}
+        <input type="date" placeholder = "Enter a date"
+            value={date} onChange={(input) => setDate(input.target.value)} />
 
-        {/* Error message */}
-        {errorText && <p className="error-msg">{errorText}</p>}
+        {/*time:*/}
+        <input type="time" placeholder = "Enter a time"
+            value={time} onChange={(input) => setTime(input.target.value)} />
 
-        {/* Buttons */}
-        <div className="btn-row">
-          <button className="btn-secondary" onClick={() => navigate("/events")}>
-            Cancel
-          </button>
-          <button
-            className="btn-primary"
-            onClick={submitEvent}
-            disabled={submitting}
-          >
-            {submitting ? "Creating..." : "Create Event 🎉"}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
+        {/*max capacity:*/}
+        <input type="number" placeholder = "Enter the max capacity" min="1" 
+            value={maxCapacity} onChange={(input) => setMaxCapacity(input.target.value)} />
+
+        {/*error message, & submit button:*/}
+        {errorText !== "" && (<p className="error">{errorText}</p>)}
+        <button onClick = {submitEvent}>Create Event!</button>
+
+        </div> 
+    );
 }
+
+
+
 
 export default EventCreate;
