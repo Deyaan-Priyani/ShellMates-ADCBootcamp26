@@ -23,6 +23,9 @@ async def get_current_user(user_data: dict = Depends(verify_token)):
         result = await db.users.insert_one(new_user)
         new_user["_id"] = result.inserted_id
         return UserInDB(**new_user)
+    
+    if not user.get("name"):
+        user["name"] = user["email"].split("@")[0]
     return UserInDB(**user)
 
 

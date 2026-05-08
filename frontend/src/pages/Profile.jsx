@@ -1,106 +1,88 @@
+import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
+import { auth } from "../services/firebase";
+import EventCard from "../components/EventCard";
+import RankBadge from "../components/RankBadge";
+import api from "../services/api";
 
-export default function Proflle() {
-    const { user, loading: authLoading } = useAuth();
-
-    if (loading) return <div>Loading profile...</div>;
-    if (!user) return <div>Not logged in</div>;
+export default function Profile() {
+    const { user: firebaseUser, loading: authLoading } = useAuth();
 
     const [tab, setTab] = useState("created");
     const [created, setCreated] = useState([]);
     const [rsvped, setRsvped] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+    const [profile, setProfile] = useState(null);
 
-    const hasPhoto = Boolean(user.photoUrl);
-
-
+    // All hooks must be above any early returns
     useEffect(() => {
-        const fetchEvents = async () => {
+        const fetchData = async () => {
+            if (!firebaseUser) return;
             try {
                 setLoading(true);
                 setError("");
 
-                const [createdRes, rsvpRes] = await Promise.all([
-                    fetch("/events/mine", { credentials: "include" }),
-                    fetch("/events/rsvps", { credentials: "include" }),
-                ]);
+                // fetch user profile and events from backend
+                const profileRes = await api.get("/users/me");
+                const eventsRes = await api.get("/events")
 
-                // If any one of the results returns an error, throw an error. 
-                if (!createdRes.ok || !rsvpRes.ok) {
-                    throw new Error("Failed to load events");
-                }
+                setProfile(profileRes.data);
+                const allEvents = eventsRes.data;
 
-                const createdData = await createdRes.json();
-                const rsvpData = await rsvpRes.json();
+                setCreated(allEvents.filter(e => e.organizer_email === firebaseUser.email));
+                setRsvped(allEvents.filter(e => e.attendees.includes(firebaseUser.email)));
 
-
-                setCreated(createdData);
-                setRsvped(rsvpData);
             } catch (err) {
-                setError(err.message || "Error loading events");
+                console.error("Profile fetch failed:", err.response?.data || err.message);
+                setError("Error loading profile: " + (err.response?.data?.detail || err.message));
             } finally {
                 setLoading(false);
             }
         };
 
-        if (user) fetchEvents();
-    }, [user]);
+        fetchData();
+    }, [firebaseUser]);
 
-    // Loading 
+    // Early returns after all hooks
     if (authLoading || loading) return <div>Loading...</div>;
-
-    // No user exists
-    if (!user) return <div>Not logged in</div>;
-
-    // Error thrown 
+    if (!firebaseUser) return <div>Not logged in</div>;
     if (error) return <div>{error}</div>;
+    if (!profile) return <div>No profile found</div>;
 
     const events = tab === "created" ? created : rsvped;
+    const initials = profile.name?.split(" ").map(n => n[0]).join("").toUpperCase() || "?";
+    const progressPercent = profile.rankProgress ?? 0;
 
     return (
         <div className="profile-page">
             {/* Photo/Initials */}
             <div className="photo">
-                {hasPhoto ? (
-                    <img src={user.photoUrl}></img>
+                {firebaseUser.photoURL ? (
+                    <img src={firebaseUser.photoURL} alt="profile" />
                 ) : (
-                    <div>
-                        {initials}
-                    </div>
+                    <div>{initials}</div>
                 )}
             </div>
             <div>
                 <h1>Profile</h1>
-                <p>Name: {user.name}</p>
-                <p>Terpmail: {user.email}</p>
-                <RankBadge tier={user.rankBadge} />
+                <p>Name: {profile.name}</p>
+                <p>Terpmail: {profile.email}</p>
+                <RankBadge tier={profile.rankBadge} />
             </div>
             <div className="rank-strip">
-                {/* Progress bar. Will implement class for this to display properly.*/}
                 <div>
-                    <div
-                        style={{ width: `${progressPercent}%` }}
-                    />
+                    <div style={{ width: `${progressPercent}%` }} />
                 </div>
-
-                {/* Progress number. TODO: Function which takes rank and returns progress required for next tier. */}
-                <p>
-                    {user.rankProgress} / X
-                </p>
+                <p>{profile.rankProgress} / 20 events</p>
             </div>
 
-            <div className = "rsvp-created-menu">
-                <button onClick={() => setTab("created")}>
-                    Events I Created
-                </button>
-
-                <button onClick={() => setTab("rsvped")}>
-                    Events I RSVPed To
-                </button>
+            <div className="rsvp-created-menu">
+                <button onClick={() => setTab("created")}>Events I Created</button>
+                <button onClick={() => setTab("rsvped")}>Events I RSVPed To</button>
             </div>
 
-            <div className = "events-list">
+            <div className="events-list">
                 {events.length === 0 ? (
                     <div>No events found</div>
                 ) : (
@@ -109,7 +91,6 @@ export default function Proflle() {
                     ))
                 )}
             </div>
-
         </div>
     );
 }
